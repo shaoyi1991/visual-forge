@@ -6,6 +6,10 @@
 
 Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复杂的 Prompt 工程封装为 28 种预设风格，通过自然语言驱动，支持封面、信息图、自由生图、PPT 四大场景。内置双引擎自动 fallback 机制，当主引擎不可用时自动切换备用引擎，确保生图成功率。
 
+**28 种预设风格一览：**
+
+![style-gallery-overview](config/previews/style-gallery-overview.png)
+
 ---
 
 ## 特性
