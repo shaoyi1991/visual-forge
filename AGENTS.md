@@ -6,6 +6,70 @@
 
 Visual Forge 是一个零外部依赖的 AI 图像生成引擎。Python stdlib 实现，通过自然语言驱动，支持 28 种预设风格和双引擎 fallback。
 
+## 安装步骤（AI 助手执行）
+
+收到「帮我安装 Visual Forge」的请求后，按以下步骤执行：
+
+### 1. 克隆仓库
+
+```bash
+git clone https://github.com/shaoyi1991/visual-forge.git
+cd visual-forge
+```
+
+### 2. 检查 Python 版本
+
+```bash
+python --version  # 需要 3.10+
+```
+
+如果版本低于 3.10，提示用户安装或升级 Python。
+
+### 3. 配置环境变量
+
+```bash
+cp .env.example .env
+```
+
+然后引导用户填入至少一组 API 密钥。两种引擎只需配置一种：
+
+**方案 A：yunwu（Gemini 代理，推荐）**
+```bash
+LLM_API_KEY=sk-xxx        # 必填
+LLM_BASE_URL=https://yunwu.ai/v1  # 默认值，一般不改
+```
+
+**方案 B：grsai（nano-banana，备用）**
+```bash
+BANANA_API_URL=http://grsai.dakka.com.cn/v1/draw/nano-banana  # 默认值
+BANANA_API_KEY=sk-xxx      # 必填
+BANANA_OSS_ID=xxx          # 必填
+```
+
+### 4. 验证安装
+
+```bash
+# 使用任意引擎生成一张测试图
+python scripts/generate.py \
+  --config config/engine.json \
+  --style visual_note --prompt "a cute cat reading a book" \
+  --out test_output.jpg
+```
+
+成功输出 `test_output.jpg` 即安装完成。如果失败，根据错误信息排查：
+- `缺少 API Key` → 检查 .env 文件是否正确填写
+- `连接超时` → 检查网络，尝试切换 `VF_PROVIDER=grsai`
+- `未找到 Python` → 确认 python3 在 PATH 中
+
+### 5. 浏览风格画廊
+
+```bash
+# 用浏览器打开风格画廊，查看 28 种预设风格
+python -c "import webbrowser; webbrowser.open('config/style-gallery.html')"
+# 或直接双击 config/style-gallery.html
+```
+
+
 ## 技术栈
 
 - Python 3.10+（stdlib only，无 pip install 依赖）

@@ -20,6 +20,26 @@ Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复
 
 ---
 
+
+## 让 AI 帮你安装
+
+> **不会配置环境？直接把下面这段话复制给你的 AI 编程助手（Claude Code / Cursor / Copilot 等），它会自动完成安装和配置。**
+
+```
+请帮我安装 Visual Forge 图像生成引擎。
+
+1. git clone https://github.com/shaoyi1991/visual-forge.git
+2. 阅读项目中的 AGENTS.md，了解项目结构和配置要求
+3. 复制 .env.example 为 .env，引导我填入 API Key
+4. 运行一条测试命令验证安装成功
+
+如果我的环境缺少 Python 3.10+，也请帮我安装。
+```
+
+> 没有图像生成 API？项目中已配置两个引擎：yunwu（Gemini 代理）和 grsai（nano-banana），只需任选一个申请密钥即可。
+
+---
+
 ## 快速开始
 
 ### 环境要求
