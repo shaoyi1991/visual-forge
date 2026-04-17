@@ -416,3 +416,35 @@ MIT License
 
 ## 致谢
 - 双引擎架构参考了 Gemini generateContent API 和 nano-banana REST API
+
+### Q: 如何更新已发布的项目？
+
+如果你在本地修改了生图技能（新增风格、修改 Prompt 等），按以下步骤同步到 GitHub：
+
+```bash
+# 1. 进入独立仓库目录
+cd C:/Users/Administrator/AppData/Local/Temp/visual-forge
+
+# 2. 从主项目复制变更的核心文件
+# 按需复制你修改过的文件：
+cp /path/to/main-project/.claude/skills/image/config/prompts.yaml config/
+cp /path/to/main-project/.claude/skills/image/config/engine.json config/
+cp /path/to/main-project/.claude/skills/image/scripts/generate.py scripts/
+
+# 3. 提交并推送
+git add -A
+git commit -m "feat: 描述你的变更"
+git push
+```
+
+**常见变更与需要复制的文件**：
+
+| 变更类型 | 需要复制的文件 |
+|---------|--------------|
+| 新增/修改风格 | `config/prompts.yaml` + `config/style-gallery.html` + `config/previews/` |
+| 新增/切换模型 | `config/engine.json` + `scripts/generate.py` |
+| 修复引擎 bug | `scripts/generate.py` |
+| 新增引擎 | `config/engine.json` + `scripts/generate.py` |
+| 更新文档 | `README.md` / `AGENTS.md` / `references/` |
+
+> 注意：`generate.py` 中的 `.env` 路径在独立仓库中是 `script_dir.parent.parent`，在主项目中是 `script_dir.parent.parent.parent.parent`。复制后需确认路径是否正确。

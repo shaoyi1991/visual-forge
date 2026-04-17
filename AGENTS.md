@@ -91,3 +91,29 @@ python scripts/generate.py \
 - 所有 Prompt 模板必须英文（AI 图像模型对英文理解更好）
 - `config/previews/` 中的预览图需要包含在 Git 中（!config/previews/ 在 .gitignore 中有例外规则）
 - 风格画廊 HTML 中的 STYLES 数据需要与 prompts.yaml 保持同步
+
+## 更新同步流程
+
+当主项目的生图技能发生变更时，按以下步骤同步到独立仓库：
+
+```bash
+# 1. 进入独立仓库目录
+cd C:/Users/Administrator/AppData/Local/Temp/visual-forge
+
+# 2. 复制变更文件（按需选择）
+cp <主项目>/.claude/skills/image/config/prompts.yaml   config/
+cp <主项目>/.claude/skills/image/config/engine.json     config/
+cp <主项目>/.claude/skills/image/scripts/generate.py    scripts/
+# 路径注意：generate.py 中 _init_dotenv() 的 project_root 路径需要适配：
+#   主项目：script_dir.parent.parent.parent.parent
+#   独立仓库：script_dir.parent.parent
+
+# 3. 提交推送
+git add -A
+git commit -m "feat: 描述变更"
+git push
+```
+
+**不需要同步的文件**：
+- `SKILL.md` — Claude Code 技能定义，仅主项目使用
+- 飞书推送相关的 chat_id 配置
