@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Forge — 风格画廊</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e6;
+    min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+    position: sticky;
+    top: 0;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 16px 24px;
+    z-index: 200;
+}
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.header-title {
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.provider-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.provider-label {
+    font-size: 12px;
+    color: #86868b;
+}
+.provider-btn {
+    padding: 4px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: #86868b;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.provider-btn:hover { border-color: rgba(255,255,255,0.3); color: #ccc; }
+.provider-btn.active {
+    background: rgba(102,126,234,0.2);
+    border-color: #667eea;
+    color: #667eea;
+}
+.model-select {
+    background: #1a1a24;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #bbb;
+    padding: 4px 8px;
+    border-radius: 14px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+}
+.model-select:hover { border-color: rgba(255,255,255,0.3); }
+.header-stats {
+    font-size: 13px;
+    color: #86868b;
+}
+.scene-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+    width: 100%;
+}
+.scene-tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: #86868b;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.scene-tab:hover { border-color: rgba(255,255,255,0.3); color: #ccc; }
+.scene-tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: transparent;
+    color: white;
+    font-weight: 500;
+}
+
+/* ── Main ── */
+.main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.scene-section {
+    margin-bottom: 48px;
+}
+.scene-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+}
+.scene-desc {
+    font-size: 13px;
+    color: #86868b;
+    margin-bottom: 20px;
+}
+
+/* ── Style Grid ── */
+.style-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* ── Style Card ── */
+.style-card {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+.style-card:hover {
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.style-card.selected {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102,126,234,0.3), 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.card-preview {
+    height: 160px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.card-preview .style-icon {
+    font-size: 48px;
+    z-index: 1;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+.card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0.95;
+    background: #111118;
+}
+.card-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+}
+
+.card-body {
+    padding: 16px;
+}
+.card-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #fff;
+}
+.card-id {
+    font-size: 12px;
+    color: #667eea;
+    font-family: "SF Mono", "Cascadia Code", monospace;
+    margin-bottom: 8px;
+}
+.card-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+.card-keyword {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    color: #aaa;
+}
+.card-meta {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    gap: 12px;
+}
+
+/* ── Style Color Themes ── */
+.theme-visual_note { background: linear-gradient(135deg, #f8f9fa, #e3f2fd, #fff3e0); }
+.theme-hand_drawn { background: linear-gradient(135deg, #ffecd2, #fcb69f, #ff9a9e); }
+.theme-mono_bw { background: linear-gradient(135deg, #ffffff, #e0e0e0, #424242); }
+.theme-business { background: linear-gradient(135deg, #1a237e, #283593, #e8eaf6); }
+.theme-cyberpunk { background: linear-gradient(135deg, #0d0221, #0a0a2e, #00f0ff, #ff00ff); }
+.theme-collage { background: linear-gradient(135deg, #fff9c4, #c8e6c9, #ffcc80); }
+.theme-tropical { background: linear-gradient(135deg, #1b5e20, #2e7d32, #f9a825); }
+.theme-illustration { background: linear-gradient(135deg, #fff8e1, #e8f5e9, #bbdefb); }
+.theme-kawaii { background: linear-gradient(135deg, #fce4ec, #f8bbd0, #f48fb1); }
+.theme-warm_healing { background: linear-gradient(135deg, #fff3e0, #ffe0b2, #ffccbc); }
+.theme-watercolor { background: linear-gradient(135deg, #e1f5fe, #b3e5fc, #e0f2f1); }
+.theme-tech_blueprint { background: linear-gradient(135deg, #0d47a1, #1565c0, #e3f2fd); }
+.theme-retro_pop { background: linear-gradient(135deg, #f44336, #ffeb3b, #2196f3); }
+.theme-scrapbook { background: linear-gradient(135deg, #d7ccc8, #a1887f, #ffcc80); }
+.theme-clay_doodle { background: linear-gradient(135deg, #c1694f, #e8d5b7, #8b7355); }
+.theme-vector { background: linear-gradient(135deg, #2d3436, #0984e3, #ffeaa7); }
+.theme-tech { background: linear-gradient(135deg, #0a0e27, #1a237e, #00bcd4); }
+.theme-blueprint { background: linear-gradient(135deg, #e3f2fd, #bbdefb, #0d47a1); }
+.theme-sketch { background: linear-gradient(135deg, #fafafa, #eee, #bdbdbd); }
+.theme-minimal { background: linear-gradient(135deg, #ffffff, #f5f5f5, #e0e0e0); }
+.theme-ppt_retro_pop { background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #ffd93d); }
+.theme-ppt_minimal { background: linear-gradient(135deg, #ffffff, #f5f5f5); }
+.theme-ppt_cyberpunk { background: linear-gradient(135deg, #1a1a2e, #ff00ff, #00ffff); }
+.theme-ppt_neo_brutalism { background: linear-gradient(135deg, #ff4d4d, #4d94ff, #ffd93d); }
+.theme-ppt_swiss { background: linear-gradient(135deg, #007aff, #fff066, #9966ff); }
+.theme-ppt_blueprint { background: linear-gradient(135deg, #ffffff, #66b8cc); }
+
+/* ── Detail Panel ── */
+.detail-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+.detail-overlay.show { display: flex; }
+.detail-panel {
+    background: #1a1a24;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.detail-header {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: #1a1a24;
+    z-index: 1;
+}
+.detail-name { font-size: 22px; font-weight: 700; color: #fff; }
+.detail-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #aaa;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.detail-close:hover { background: rgba(255,255,255,0.15); }
+.detail-body { padding: 24px; }
+.detail-section { margin-bottom: 20px; }
+.detail-section:last-child { margin-bottom: 0; }
+.detail-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.detail-prompt {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #bbb;
+    background: rgba(255,255,255,0.04);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-family: "SF Mono", "Cascadia Code", monospace;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.nl-example {
+    background: #0d1117;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #7ee787;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+    margin-bottom: 8px;
+}
+.nl-example:last-child { margin-bottom: 0; }
+.nl-example:hover { border-color: #667eea; }
+.nl-example .copy-hint {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 11px;
+    color: #666;
+}
+.cli-ref {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: "SF Mono", "Cascadia Code", monospace;
+    font-size: 11px;
+    color: #666;
+    line-height: 1.6;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.cli-ref:hover { border-color: rgba(255,255,255,0.15); }
+
+/* ── Preview Image in Detail ── */
+.detail-preview {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.detail-preview img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .style-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card-preview { height: 120px; }
+    .card-body { padding: 12px; }
+    .header { padding: 12px 16px; }
+    .scene-tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .header-controls { gap: 8px; }
+}
+
+/* ── Toast ── */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #667eea;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    z-index: 400;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <div class="header-title">Visual Forge 风格画廊</div>
+        <div class="header-controls">
+            <div class="provider-group">
+                <span class="provider-label">引擎：</span>
+                <button class="provider-btn active" data-provider="auto">自动</button>
+                <button class="provider-btn" data-provider="yunwu">云雾</button>
+                <button class="provider-btn" data-provider="grsai">grsai</button>
+            </div>
+            <div class="provider-group" id="modelGroup">
+                <span class="provider-label">模型：</span>
+                <select class="model-select" id="modelSelect"></select>
+            </div>
+            <div class="header-stats">28 种风格 · 4 个场景</div>
+        </div>
+    </div>
+    <div class="scene-tabs" id="sceneTabs">
+        <button class="scene-tab active" data-scene="all">全部</button>
+        <button class="scene-tab" data-scene="cover">封面 (11)</button>
+        <button class="scene-tab" data-scene="infographic">信息图 (5)</button>
+        <button class="scene-tab" data-scene="freeform">自由生图 (6)</button>
+        <button class="scene-tab" data-scene="ppt">PPT (6)</button>
+    </div>
+</div>
+
+<div class="main" id="mainContent"></div>
+
+<div class="detail-overlay" id="detailOverlay">
+    <div class="detail-panel">
+        <div class="detail-header">
+            <div class="detail-name" id="detailName"></div>
+            <button class="detail-close" onclick="closeDetail()">&times;</button>
+        </div>
+        <div class="detail-body" id="detailBody"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Provider Models ──
+// 数据来源：config/engine.json → providers → models
+// 新增/修改模型：编辑 engine.json，然后同步更新此处
+const PROVIDER_MODELS = {
+    auto: [
+        { id: '', name: '默认' },
+    ],
+    yunwu: [
+        { id: 'gemini-3.1-flash-image-preview', name: 'Flash（快）' },
+        { id: 'gemini-3-pro-image-preview', name: 'Pro（精）' },
+    ],
+    grsai: [
+        { id: 'nano-banana-2', name: 'nano-banana-2' },
+        { id: 'nano-banana-pro', name: 'nano-banana-pro' },
+        { id: 'gpt-image-1.5', name: 'gpt-image-1.5' },
+    ],
+};
+
+// ── Style Data ──
+const STYLES = {
+    cover: [
+        {
+            id: 'visual_note', name: '视觉笔记', icon: '\u{1F4DD}',
+            keywords: ['视觉笔记','手绘笔记','信息图','notion'],
+            ratio: '4:3', preview: 'previews/cover_visual_note.jpg',
+            prompt: 'flat design infographic style, hand-drawn sketch of {METAPHOR}, clean minimal layout, white background with subtle blue-orange accent palette, pencil texture, central visual metaphor occupying 60% of frame, space for title overlay at top, sharp clean lines, no text no watermark, professional editorial illustration, 4:3 composition',
+            nlExamples: [
+                '/image 封面 AI技能分类学',
+                '/image 视觉笔记风格封面 2026知识管理',
+                '/image notion风封面 个人成长体系',
+            ],
+        },
+        {
+            id: 'hand_drawn', name: '手绘插画', icon: '\u{1F3A8}',
+            keywords: ['手绘','插画','可爱','小红书'],
+            ratio: '3:4', preview: 'previews/cover_hand_drawn.jpg',
+            prompt: 'vibrant hand-drawn illustration of {METAPHOR}, warm terracotta and orange palette, cream background with subtle paper texture, exaggerated cute proportions with large expressive features, colored pencil texture, bold visual symbol occupying upper 2/3 of frame, sticker-like appeal, 3:4 vertical composition',
+            nlExamples: [
+                '/image 小红书封面 可爱猫咪',
+                '/image 手绘封面 我的读书笔记',
+                '/image 插画风封面 5个提升效率的习惯',
+            ],
+        },
+        {
+            id: 'mono_bw', name: '极简黑白', icon: '\u{2B1B}',
+            keywords: ['黑白','极简','高级','克制'],
+            ratio: '4:3', preview: 'previews/cover_mono_bw.jpg',
+            prompt: 'minimalist black and white cover design, pure monochrome palette, white background with generous negative space, central area features {METAPHOR}, subtle abstract geometric line decorations, 4:3 composition',
+            nlExamples: [
+                '/image 极简封面 认知觉醒',
+                '/image 黑白封面 深度思考方法论',
+                '/image 高级感封面 2026趋势报告',
+            ],
+        },
+        {
+            id: 'business', name: '商务资讯', icon: '\u{1F4BC}',
+            keywords: ['商务','专业','都市','办公','资讯'],
+            ratio: '4:3', preview: 'previews/cover_business.jpg',
+            prompt: 'professional business news cover, high-rise cityscape aerial view, deep blue and gray-white palette, central large bold title with {METAPHOR}, clean professional layout, 4:3 composition',
+            nlExamples: [
+                '/image 商务封面 AI行业报告',
+                '/image 专业封面 2026职场趋势',
+                '/image 资讯风封面 大模型落地案例',
+            ],
+        },
+        {
+            id: 'cyberpunk', name: '赛博科技', icon: '\u{1F303}',
+            keywords: ['赛博','科技','霓虹','未来','数字'],
+            ratio: '4:3', preview: 'previews/cover_cyberpunk.jpg',
+            prompt: 'cyberpunk tech-style cover, deep blue-black tone, cyberpunk city nightscape, {METAPHOR} in luminous blue with neon glow effect, digital HUD panels, circuit patterns, 4:3 composition',
+            nlExamples: [
+                '/image 赛博风封面 AI与人类共生',
+                '/image 科技封面 未来已来',
+                '/image 霓虹风封面 数字游民指南',
+            ],
+        },
+        {
+            id: 'collage', name: '拼贴海报', icon: '\u{1F4CC}',
+            keywords: ['拼贴','贴纸','海报','活泼','拼图'],
+            ratio: '4:3', preview: 'previews/cover_collage.jpg',
+            prompt: 'collage sticker-style vibrant cover poster, torn notebook paper textures, fluorescent highlighter marks, push pins, sticky notes, {METAPHOR} in bold black font with handwritten feel, cartoon sticker decorations, 4:3 composition',
+            nlExamples: [
+                '/image 拼贴封面 一周复盘',
+                '/image 活泼海报风封面 创意工具箱',
+                '/image 贴纸风封面 快乐工作法',
+            ],
+        },
+        {
+            id: 'tropical', name: '热带雨林', icon: '\u{1F33F}',
+            keywords: ['热带','雨林','自然','绿色','探索'],
+            ratio: '4:3', preview: 'previews/cover_tropical.jpg',
+            prompt: 'tropical rainforest exploration cover poster, lush dense rainforest, hanging vines, misty atmosphere with sunlight filtering, {METAPHOR} in bold black font with playful lettering, 4:3 composition',
+            nlExamples: [
+                '/image 热带封面 探索未知',
+                '/image 自然风封面 绿色生活方式',
+                '/image 雨林封面 户外探险指南',
+            ],
+        },
+        {
+            id: 'illustration', name: '手绘插画风', icon: '\u{1F4D6}',
+            keywords: ['手绘','书房','温暖','专注'],
+            ratio: '4:3', preview: 'previews/cover_illustration.jpg',
+            prompt: 'hand-drawn illustration style cover, warm soft tones, cozy study room with sticky notes and laptop, {METAPHOR} in hand-drawn sans-serif font with dark brown outline, brushstroke effects, 4:3 composition',
+            nlExamples: [
+                '/image 书房风封面 深度学习笔记',
+                '/image 温暖封面 治愈系书单',
+                '/image 手绘书房封面 知识体系搭建',
+            ],
+        },
+        {
+            id: 'kawaii', name: '软萌可爱', icon: '\u{1F431}',
+            keywords: ['可爱','萌','粉嫩','卡通','少女'],
+            ratio: '3:4', preview: 'previews/cover_kawaii.jpg',
+            prompt: 'kawaii soft cute style cover, dreamy pink-toned scene, pale pink sky with cotton clouds, candy-colored hills, {METAPHOR} in hand-drawn cartoon font with pink-white gradient, cartoon stars and animal stickers, 3:4 vertical composition',
+            nlExamples: [
+                '/image 可爱封面 少女心好物分享',
+                '/image 小红书萌系封面 猫咪日常',
+                '/image 粉嫩封面 减压小技巧',
+            ],
+        },
+        {
+            id: 'warm_healing', name: '温暖治愈', icon: '\u{1F305}',
+            keywords: ['治愈','温暖','宁静','柔和','安心'],
+            ratio: '4:3', preview: 'previews/cover_warm_healing.jpg',
+            prompt: 'healing warm-style cover, serene golden meadow, cherry blossom trees, soft orange-pink sunset, {METAPHOR} in gentle hand-written style dark brown font, cat curled up on a book, 4:3 composition',
+            nlExamples: [
+                '/image 治愈封面 秋日私语',
+                '/image 温暖封面 给自己的一封信',
+                '/image 柔和封面 正念冥想入门',
+            ],
+        },
+        {
+            id: 'watercolor', name: '水彩写意', icon: '\u{1F58C}\u{FE0F}',
+            keywords: ['水彩','写意','文艺','淡雅','水墨'],
+            ratio: '4:3', preview: 'previews/cover_watercolor.jpg',
+            prompt: 'watercolor expressive style cover, healing relaxed artistic atmosphere, pale cream to light cyan-blue, wet-on-wet technique, {METAPHOR} in hand-written watercolor brush font style, 4:3 composition',
+            nlExamples: [
+                '/image 水彩封面 山水之间',
+                '/image 文艺封面 生活美学',
+                '/image 淡雅封面 诗与远方',
+            ],
+        },
+    ],
+    infographic: [
+        {
+            id: 'tech_blueprint', name: '坐标蓝图', icon: '\u{1F4D0}',
+            keywords: ['蓝图','坐标','实验室','技术'],
+            ratio: '3:4', preview: 'previews/info_tech_blueprint.jpg',
+            prompt: 'technical blueprint infographic of {TOPIC}, coordinate grid background in faded cyan, engineering annotations, lab manual aesthetic, muted blue-gray palette with red accent markers, 3:4 vertical composition',
+            nlExamples: [
+                '/image 信息图 人工智能发展史',
+                '/image 蓝图风信息图 大模型架构全景',
+                '/image 技术信息图 GPT演进路线',
+            ],
+        },
+        {
+            id: 'retro_pop', name: '复古波普', icon: '\u{1F386}',
+            keywords: ['波普','复古','70s'],
+            ratio: '3:4', preview: 'previews/info_retro_pop.jpg',
+            prompt: '1970s retro pop art infographic of {TOPIC}, thick black outlines, high saturation CMYK color blocks, vintage halftone dot patterns, 3:4 vertical composition',
+            nlExamples: [
+                '/image 波普风信息图 互联网50年',
+                '/image 复古信息图 音乐流派演变',
+                '/image 70s风信息图 复古设计趋势',
+            ],
+        },
+        {
+            id: 'scrapbook', name: '手帐拼贴', icon: '\u{1F4CB}',
+            keywords: ['手帐','拼贴','证据板'],
+            ratio: '3:4', preview: 'previews/info_scrapbook.jpg',
+            prompt: 'vintage scrapbook collage infographic of {TOPIC}, cork board background with push pins, masking tape and washi tape strips, polaroid-style frames, earth tones with pops of red, 3:4 vertical composition',
+            nlExamples: [
+                '/image 手帐风信息图 我的成长故事',
+                '/image 拼贴信息图 咖啡文化图鉴',
+                '/image 证据板信息图 未解之谜',
+            ],
+        },
+        {
+            id: 'clay_doodle', name: '陶土手绘', icon: '\u{1F3FA}',
+            keywords: ['陶土','手绘','暖色'],
+            ratio: '3:4', preview: 'previews/info_clay_doodle.jpg',
+            prompt: 'hand-drawn clay doodle style infographic of {TOPIC}, warm terracotta palette, imperfect wobbly lines, cream kraft paper background, earthy warm tones, 3:4 vertical composition',
+            nlExamples: [
+                '/image 陶土风信息图 陶艺入门指南',
+                '/image 暖色信息图 生活小确幸',
+                '/image 手绘信息图 个人品牌搭建',
+            ],
+        },
+        {
+            id: 'vector', name: '矢量插图', icon: '\u{1F539}',
+            keywords: ['矢量','扁平','几何'],
+            ratio: '3:4', preview: 'previews/info_vector.jpg',
+            prompt: 'clean vector infographic of {TOPIC}, flat monoline illustration, geometric simplification, bold color blocking with 3-4 primary colors, Swiss design principles, 3:4 vertical composition',
+            nlExamples: [
+                '/image 矢量信息图 商业模式画布',
+                '/image 扁平信息图 产品经理能力模型',
+                '/image 几何信息图 数据可视化入门',
+            ],
+        },
+    ],
+    freeform: [
+        {
+            id: 'visual_note', name: '视觉笔记', icon: '\u{1F4DD}',
+            keywords: ['视觉笔记','手绘笔记','信息图'],
+            ratios: ['4:3','16:9'], preview: 'previews/free_visual_note.jpg',
+            prompt: 'flat design infographic style, hand-drawn sketch quality, clean minimal layout, white background with blue-orange accent, pencil texture',
+            nlExamples: [
+                '/image 视觉笔记 一只猫在读书',
+                '/image 手绘笔记 飞向太空的火箭',
+                '/image 信息图风格 城市天际线',
+            ],
+        },
+        {
+            id: 'hand_drawn', name: '手绘插画', icon: '\u{1F3A8}',
+            keywords: ['手绘','插画','可爱'],
+            ratios: ['3:4','1:1'], preview: 'previews/free_hand_drawn.jpg',
+            prompt: 'vibrant hand-drawn illustration, warm terracotta and orange palette, cream background, colored pencil texture, cute proportions',
+            nlExamples: [
+                '/image 手绘一只在雨中撑伞的猫',
+                '/image 插画风 可爱的机器人在花园',
+                '/image 画一只可爱的柯基犬',
+            ],
+        },
+        {
+            id: 'tech', name: '科技蓝图', icon: '\u{1F52E}',
+            keywords: ['科技','技术','未来','赛博'],
+            ratios: ['4:3','16:9'], preview: 'previews/free_tech.jpg',
+            prompt: 'futuristic technology aesthetic, dark navy background with glowing cyan circuit traces, holographic data visualization, neon accent lighting',
+            nlExamples: [
+                '/image 赛博风 一座未来的城市',
+                '/image 科技感 数据中心内景',
+                '/image 未来风 量子计算机',
+            ],
+        },
+        {
+            id: 'blueprint', name: '工程蓝图', icon: '\u{1F4CA}',
+            keywords: ['蓝图','工程','架构'],
+            ratios: ['4:3','16:9'], preview: 'previews/free_blueprint.jpg',
+            prompt: 'engineering blueprint style, coordinate grid background in faded cyan, dimension lines and technical annotations, precision drafting aesthetic',
+            nlExamples: [
+                '/image 蓝图风格 一座桥的结构',
+                '/image 工程风 汽车发动机剖面',
+                '/image 架构图 微服务系统设计',
+            ],
+        },
+        {
+            id: 'sketch', name: '铅笔素描', icon: '\u{270F}\u{FE0F}',
+            keywords: ['素描','线稿','速写'],
+            ratios: ['4:3','1:1'], preview: 'previews/free_sketch.jpg',
+            prompt: 'pencil sketch on white paper, monochrome graphite shading, loose expressive lines with visible stroke texture',
+            nlExamples: [
+                '/image 素描风格的山水',
+                '/image 线稿 一只展翅的鹰',
+                '/image 速写 巴黎街景',
+            ],
+        },
+        {
+            id: 'minimal', name: '苹果极简', icon: '\u{25FB}\u{FE0F}',
+            keywords: ['极简','简约','干净'],
+            ratios: ['4:3','1:1'], preview: 'previews/free_minimal.jpg',
+            prompt: 'ultra minimalist design, vast white negative space, single accent color element, geometric precision, Japanese-inspired simplicity',
+            nlExamples: [
+                '/image 极简风格 一棵孤独的树',
+                '/image 简约 侘寂之美的茶杯',
+                '/image 干净风格 一朵花的特写',
+            ],
+        },
+    ],
+    ppt: [
+        {
+            id: 'ppt_retro_pop', name: '复古波普', icon: '\u{1F386}',
+            keywords: ['波普','复古','70s'],
+            ratio: '16:9',
+            prompt: 'Retro pop art style PPT slide, 1970s magazine aesthetic, flat design with thick black outlines, cream beige background',
+            preview: 'previews/ppt_retro_pop.jpg',
+            nlExamples: [
+                '/image 波普风PPT AI技术趋势2026',
+                '/image 复古PPT slide 产品发布',
+                '/image 70s风格PPT 季度汇报',
+            ],
+        },
+        {
+            id: 'ppt_minimal', name: '极简主义', icon: '\u{25FB}\u{FE0F}',
+            keywords: ['极简','简约','干净'],
+            ratio: '16:9',
+            prompt: 'Minimalist clean design PPT slide, white background, generous whitespace, thin elegant lines, Inter Helvetica font',
+            preview: 'previews/ppt_minimal.jpg',
+            nlExamples: [
+                '/image 极简PPT 品牌理念介绍',
+                '/image 简约PPT slide 产品路线图',
+                '/image 干净风格PPT 数据报告',
+            ],
+        },
+        {
+            id: 'ppt_cyberpunk', name: '赛博朋克', icon: '\u{1F303}',
+            keywords: ['赛博','霓虹','暗黑'],
+            ratio: '16:9',
+            prompt: 'Cyberpunk neon style PPT slide, dark charcoal background, neon glow effect, magenta cyan yellow neon colors, holographic data panels',
+            preview: 'previews/ppt_cyberpunk.jpg',
+            nlExamples: [
+                '/image 赛博PPT 黑客马拉松展示',
+                '/image 霓虹PPT slide 游戏发布',
+                '/image 暗黑风PPT 科技产品发布',
+            ],
+        },
+        {
+            id: 'ppt_neo_brutalism', name: '新粗野主义', icon: '\u{1F9F1}',
+            keywords: ['粗野','野兽','粗犷'],
+            ratio: '16:9',
+            prompt: 'Neo-brutalism style PPT slide, cream background, bold primary colors, thick 4px black outlines, hard shadows, brutalist frames',
+            preview: 'previews/ppt_neo_brutalism.jpg',
+            nlExamples: [
+                '/image 粗野风PPT 创意提案',
+                '/image 野兽派PPT slide 设计宣言',
+                '/image 粗犷PPT 品牌重塑方案',
+            ],
+        },
+        {
+            id: 'ppt_swiss', name: '瑞士国际', icon: '\u{1F1E8}\u{1F1ED}',
+            keywords: ['瑞士','网格','国际'],
+            ratio: '16:9',
+            prompt: 'Swiss international style PPT slide, light gray background, high saturation colors, Helvetica font, asymmetric composition',
+            preview: 'previews/ppt_swiss.jpg',
+            nlExamples: [
+                '/image 瑞士风PPT 平面设计史',
+                '/image 网格PPT slide 建筑展示',
+                '/image 国际风格PPT 设计系统',
+            ],
+        },
+        {
+            id: 'ppt_blueprint', name: '设计蓝图', icon: '\u{1F4D0}',
+            keywords: ['蓝图','设计','Figma'],
+            ratio: '16:9',
+            prompt: 'Design blueprint PPT slide, Figma documentation style, white background with cyan grid lines, annotation lines, UI mockup aesthetic',
+            preview: 'previews/ppt_blueprint.jpg',
+            nlExamples: [
+                '/image 蓝图PPT 技术架构展示',
+                '/image Figma风PPT 设计规范',
+                '/image 设计蓝图PPT 系统文档',
+            ],
+        },
+    ],
+};
+
+const SCENE_LABELS = {
+    cover: '封面 Cover',
+    infographic: '信息大图 Infographic',
+    freeform: '自由生图 Freeform',
+    ppt: 'PPT 幻灯片',
+};
+
+// ── State ──
+let currentProvider = 'auto';
+let currentModel = '';
+
+// ── Model Selector ──
+function updateModelSelect() {
+    const sel = document.getElementById('modelSelect');
+    const models = PROVIDER_MODELS[currentProvider] || [];
+    sel.innerHTML = models.map(m =>
+        `<option value="${m.id}" ${m.id === currentModel ? 'selected' : ''}>${m.name}</option>`
+    ).join('');
+    if (!models.find(m => m.id === currentModel)) {
+        currentModel = models[0]?.id || '';
+    }
+}
+
+// ── Render Cards ──
+function renderCards(filterScene) {
+    const main = document.getElementById('mainContent');
+    main.innerHTML = '';
+
+    const scenes = filterScene === 'all'
+        ? ['cover', 'infographic', 'freeform', 'ppt']
+        : [filterScene];
+
+    scenes.forEach(scene => {
+        const styles = STYLES[scene];
+        if (!styles) return;
+
+        const section = document.createElement('div');
+        section.className = 'scene-section';
+        section.innerHTML = `
+            <div class="scene-title">${SCENE_LABELS[scene]}</div>
+            <div class="scene-desc">${scene === 'cover' ? '公众号/小红书封面，11种高转化率风格' : scene === 'infographic' ? '高密度信息图，5种视觉风格' : scene === 'freeform' ? '自由描述任意图片，6种风格修饰' : '演示文稿幻灯片，6种设计风格'}</div>
+            <div class="style-grid" id="grid-${scene}"></div>
+        `;
+        main.appendChild(section);
+
+        const grid = document.getElementById(`grid-${scene}`);
+        styles.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'style-card';
+            card.setAttribute('data-style', s.id);
+            card.setAttribute('data-scene', scene);
+
+            const themeClass = `theme-${s.id.replace('ppt_', '')}`;
+            const ratio = s.ratio || (s.ratios ? s.ratios.join(', ') : '4:3');
+            const kwHtml = s.keywords.slice(0, 4).map(k => `<span class="card-keyword">${k}</span>`).join('');
+
+            let previewHtml;
+            if (s.preview) {
+                previewHtml = `<img src="${s.preview}" alt="${s.name}" style="width:100%;height:100%;object-fit:contain;opacity:0.95;background:#111118" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="style-icon" style="display:none">${s.icon}</div>`;
+            } else {
+                previewHtml = `<div class="style-icon">${s.icon}</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="card-preview ${themeClass}">
+                    ${previewHtml}
+                </div>
+                <div class="card-body">
+                    <div class="card-name">${s.name}</div>
+                    <div class="card-id">${s.id}</div>
+                    <div class="card-keywords">${kwHtml}</div>
+                    <div class="card-meta">
+                        <span>${ratio}</span>
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', () => openDetail(s, scene));
+            grid.appendChild(card);
+        });
+    });
+}
+
+// ── Detail Panel ──
+function openDetail(style, scene) {
+    const overlay = document.getElementById('detailOverlay');
+    document.getElementById('detailName').textContent = `${style.icon} ${style.name}`;
+
+    const ratio = style.ratio || (style.ratios ? style.ratios.join(' / ') : '4:3');
+    const providerArg = currentProvider !== 'auto' ? `  --provider ${currentProvider} \\\n` : '';
+    const modelArg = currentModel ? `  --model ${currentModel} \\\n` : '';
+    const cliCommand = `python .claude/skills/image/scripts/generate.py \\\n  --config .claude/skills/image/config/engine.json \\\n${providerArg}${modelArg}  --style ${style.id} --prompt "your prompt" \\\n  --out "30_内容创作/32_草稿箱/output.jpg"`;
+
+    // Preview image in detail
+    let previewHtml = '';
+    if (style.preview) {
+        previewHtml = `<div class="detail-section">
+            <div class="detail-preview"><img src="${style.preview}" alt="${style.name}" onerror="this.parentElement.style.display='none'"></div>
+        </div>`;
+    }
+
+    // Natural language examples (PRIMARY)
+    const nlHtml = (style.nlExamples || []).map(ex =>
+        `<div class="nl-example" onclick="copyText('${ex.replace(/'/g, "\\'")}')" title="点击复制">
+            <span class="copy-hint">点击复制</span>
+            ${ex}
+        </div>`
+    ).join('');
+
+    document.getElementById('detailBody').innerHTML = `
+        ${previewHtml}
+        <div class="detail-section">
+            <div class="detail-label">怎么用（直接说）</div>
+            ${nlHtml}
+        </div>
+        <div class="detail-section">
+            <div class="detail-label">关键词</div>
+            <div class="card-keywords">${style.keywords.map(k => `<span class="card-keyword">${k}</span>`).join('')}</div>
+        </div>
+        <div class="detail-section">
+            <div class="detail-label">比例</div>
+            <div style="color:#bbb">${ratio}</div>
+        </div>
+        <div class="detail-section">
+            <div class="detail-label">Prompt 模板</div>
+            <div class="detail-prompt">${style.prompt}</div>
+        </div>
+        <div class="detail-section">
+            <div class="detail-label">CLI 参考（高级用户）</div>
+            <div class="cli-ref" onclick="copyCommand(this)" title="点击复制">
+                ${cliCommand}
+            </div>
+        </div>
+    `;
+
+    overlay.classList.add('show');
+
+    // Highlight card
+    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.style-card[data-style="${style.id}"][data-scene="${scene}"]`);
+    if (card) card.classList.add('selected');
+}
+
+function closeDetail() {
+    document.getElementById('detailOverlay').classList.remove('show');
+    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+}
+
+// ── Scene Tabs ──
+document.querySelectorAll('.scene-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.scene-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderCards(tab.dataset.scene);
+    });
+});
+
+// ── Provider Selector ──
+document.querySelectorAll('.provider-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentProvider = btn.dataset.provider;
+        updateModelSelect();
+    });
+});
+
+// ── Model change ──
+document.getElementById('modelSelect').addEventListener('change', (e) => {
+    currentModel = e.target.value;
+});
+
+// ── Copy ──
+function copyCommand(el) {
+    const text = el.innerText.trim();
+    copyText(text);
+}
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('已复制到剪贴板');
+    }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制到剪贴板');
+    });
+}
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Close detail on overlay click
+document.getElementById('detailOverlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeDetail();
+});
+
+// ESC to close
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDetail();
+});
+
+// ── Init ──
+updateModelSelect();
+renderCards('all');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "output_dir": "30_内容创作/32_草稿箱",
+  "settings": {
+    "max_retries": 2,
+    "retry_backoff_s": 1.0,
+    "timeout_s": 120
+  },
+  "providers": {
+    "yunwu": {
+      "name": "云雾（Gemini）",
+      "base_url_env": "LLM_BASE_URL",
+      "api_key_env": "LLM_API_KEY",
+      "default_model": "gemini-3.1-flash-image-preview",
+      "models": [
+        {"id": "gemini-3.1-flash-image-preview", "name": "Flash（快）"},
+        {"id": "gemini-3-pro-image-preview", "name": "Pro（精）"}
+      ]
+    },
+    "grsai": {
+      "name": "grsai（nano-banana）",
+      "api_url_env": "BANANA_API_URL",
+      "api_key_env": "BANANA_API_KEY",
+      "oss_id_env": "BANANA_OSS_ID",
+      "default_model": "nano-banana-2",
+      "models": [
+        {"id": "nano-banana-2", "name": "nano-banana-2"},
+        {"id": "nano-banana-pro", "name": "nano-banana-pro"},
+        {"id": "gpt-image-1.5", "name": "gpt-image-1.5"}
+      ]
+    }
+  }
+}

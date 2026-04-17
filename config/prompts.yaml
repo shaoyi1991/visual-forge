@@ -1,0 +1,211 @@
+# ============================================================
+# Visual Forge 统一提示词配置
+# 最后更新：2026-04-16
+# 变量：{METAPHOR}=封面隐喻  {TOPIC}=信息图主题  {DESCRIPTION}=自由描述
+# ============================================================
+
+# ========================================
+# 场景一：封面（cover）
+# 比例默认 4:3（公众号）/ 3:4（小红书），变量：{METAPHOR}
+# 前 2 种为原有模板，后 9 种来自阿昆「一键搞定公众号封面」
+# ========================================
+cover:
+  visual_note:
+    name: "视觉笔记"
+    keywords: ["视觉笔记", "手绘笔记", "信息图", "notion"]
+    ratio: "4:3"
+    prompt: |
+      flat design infographic style, hand-drawn sketch of {METAPHOR}, clean minimal layout, white background with subtle blue-orange accent palette, pencil texture, central visual metaphor occupying 60% of frame, space for title overlay at top, sharp clean lines, no text no watermark, professional editorial illustration, 4:3 composition
+
+  hand_drawn:
+    name: "手绘插画"
+    keywords: ["手绘", "插画", "可爱", "小红书"]
+    ratio: "3:4"
+    prompt: |
+      vibrant hand-drawn illustration of {METAPHOR}, warm terracotta and orange palette (#FF6B6B, #FFD93D, cream white), cream background with subtle paper texture, exaggerated cute proportions with large expressive features, colored pencil texture, bold visual symbol occupying upper 2/3 of frame, sticker-like appeal for social media scroll-stopping, high contrast warm tones, sharp details, no text no watermark, 3:4 vertical composition
+
+  mono_bw:
+    name: "极简黑白"
+    keywords: ["黑白", "极简", "高级", "克制"]
+    ratio: "4:3"
+    prompt: |
+      minimalist black and white cover design, pure monochrome palette with zero color elements, creating a restrained and sophisticated aesthetic. white background with generous negative space, clean composition emphasizing visual breathing room. central area features {METAPHOR} rendered in bold thick black sans-serif typography occupying the visual focal point, large and eye-catching. subtle abstract geometric line decorations in corners (wireframe grids, simplified tool outlines like magnifying glass or lightbulb), maintaining the monochrome beauty and adding a tech-rational atmosphere. no photographs no gradients, 4:3 composition
+
+  business:
+    name: "商务资讯"
+    keywords: ["商务", "专业", "都市", "办公", "资讯"]
+    ratio: "4:3"
+    prompt: |
+      professional business news cover image, sophisticated urban office aesthetic. background shows a high-rise cityscape aerial view with glass curtain walls reflecting blue sky, mid-ground features arranged office desks with laptops charts and smartphones, a coffee cup and sticky notes at desk corner. color palette dominated by deep blue and gray-white emphasizing rationality and professionalism, with small bright yellow or orange accents as visual guides. semi-transparent dark overlay at 10% opacity to highlight text area. central large bold sans-serif title text area with {METAPHOR}, white text with subtle shadow. clean professional layout, 4:3 composition
+
+  cyberpunk:
+    name: "赛博科技"
+    keywords: ["赛博", "科技", "霓虹", "未来", "数字"]
+    ratio: "4:3"
+    prompt: |
+      cyberpunk tech-style cover image, deep blue-black tone background featuring cyberpunk city nightscape. distant blurred tech metropolis with metallic buildings, floating holographic ads, and virtual data stream ribbons. background defocused and dimmed serving as atmosphere. central area dominated by {METAPHOR} in luminous blue or fluorescent white with neon glow effect, electric current flowing texture. semi-transparent digital HUD panels behind text with glowing edge lines. surrounding dynamic elements: digital rain, radar scan circles, circuit patterns, pulsing data points. strong tech immersion atmosphere, 4:3 composition
+
+  collage:
+    name: "拼贴海报"
+    keywords: ["拼贴", "贴纸", "海报", "活泼", "拼图"]
+    ratio: "4:3"
+    prompt: |
+      collage sticker-style vibrant cover poster, bright cheerful color scheme. background features abstract collage elements: torn notebook paper textures, fluorescent highlighter marks, push pins, sticky notes, and computer screen sticker graphics (AI chat bubbles, brain icons, progress bars). color palette of light cream white with orange-yellow and mint green accents, fresh and bright overall. central irregular-shaped white text block with hand-torn paper texture featuring {METAPHOR} in bold black font with slight handwritten feel, youthful and energetic. surrounded by cartoon sticker decorations: magnifying glass, star-eyes emoji, lightning bolts, green arrows, yellow smiley stickers enhancing fun and dynamism, 4:3 composition
+
+  tropical:
+    name: "热带雨林"
+    keywords: ["热带", "雨林", "自然", "绿色", "探索"]
+    ratio: "4:3"
+    prompt: |
+      tropical rainforest exploration cover poster, foreground dominated by large typography with natural scenery as background. lush dense tropical rainforest: moss-covered muddy ground, towering canopy trees, hanging vines cascading from treetops, misty atmosphere with sunlight filtering through leaves creating golden light spots, waterfall cascading from one side. natural color palette of green deep brown and golden light spots. central text area occupying 60-70% of frame as visual focal point, {METAPHOR} in bold black font with slightly irregular playful lettering enhancing wild visual impact. surrounded by decorative elements: cartoon leaf shapes, green arrows, small animal silhouettes like tree frog and hummingbird, 4:3 composition
+
+  illustration:
+    name: "手绘插画风"
+    keywords: ["手绘", "书房", "温暖", "专注"]
+    ratio: "4:3"
+    prompt: |
+      hand-drawn illustration style cover image with warm soft tones using pale yellow light blue and olive green natural hand-drawn colors. background shows a cozy study room with sticky notes and charts on wall, laptop books and a hot coffee on desk, soft sunlight streaming through window creating a quiet focused learning atmosphere. central upper area features {METAPHOR} in hand-drawn sans-serif font with dark brown outline and light orange fill, eye-catching yet gentle. irregular hand-drawn bubble-shaped background behind text area, bottom edge with hand-drawn dashed decorations, brushstroke effects and small sticker elements like magnifying glass, chat bubbles, checkmarks, thought clouds, 4:3 composition
+
+  kawaii:
+    name: "软萌可爱"
+    keywords: ["可爱", "萌", "粉嫩", "卡通", "少女"]
+    ratio: "3:4"
+    prompt: |
+      kawaii soft cute style cover poster with dreamy pink-toned scene. pale pink sky with fluffy white cotton clouds, sunlight like cream candy sprinkling across the image. soft cartoon grassland below decorated with smiley-face flowers and bouncy candy mushrooms. distant candy-colored hills and heart-shaped hot air balloons. central text area in large hand-drawn cartoon font with pink-white gradient and soft glow outline, {METAPHOR} as the visual focal point. surrounded by cartoon stars, small animal stickers like winking bunny and hugging bear, polka-dot clouds and bouncing musical notes enhancing the adorable atmosphere, 3:4 vertical composition
+
+  warm_healing:
+    name: "温暖治愈"
+    keywords: ["治愈", "温暖", "宁静", "柔和", "安心"]
+    ratio: "4:3"
+    prompt: |
+      healing warm-style cover image, background is a serene golden meadow with sunlight slanting across soft grass, distant gentle brown rolling hills, foothills dotted with pink-white cherry blossom trees, soft orange-pink sunset and scattered fluffy clouds at horizon. color palette of cream white pale pink and light orange creating a peaceful reassuring atmosphere. central large semi-transparent warm beige hand-drawn paper texture text block occupying 70% of frame, {METAPHOR} in gentle hand-written style dark brown font. text block edges decorated with small illustrative healing elements: cat curled up on a book, steaming milk tea cup, falling maple leaves, 4:3 composition
+
+  watercolor:
+    name: "水彩写意"
+    keywords: ["水彩", "写意", "文艺", "淡雅", "水墨"]
+    ratio: "4:3"
+    prompt: |
+      watercolor expressive style cover image, healing relaxed artistic atmosphere. background transitions from pale cream to light cyan-blue, wet-on-wet watercolor technique layering distant mountains and sky boundary. upper portion features misty light blue sky with flying birds, lower portion uses green and light brown watercolor washes for simplified tree shadows, wild grass and faint path. mid-ground left features a cluster of watercolor wildflowers with soft bleeding colors. foreground text as visual protagonist occupying upper-center 40%, {METAPHOR} in hand-written watercolor brush font style. text bottom has pale gray-blue watercolor brush texture as text anchor, edges with slight water bloom effect balancing artistry and readability, 4:3 composition
+
+# ========================================
+# 场景二：信息大图（infographic）
+# 比例固定 3:4，变量：{TOPIC}
+# ========================================
+infographic:
+  tech_blueprint:
+    name: "坐标蓝图"
+    keywords: ["蓝图", "坐标", "实验室", "技术"]
+    prompt: |
+      technical blueprint infographic of {TOPIC}, coordinate grid background in faded cyan, engineering annotations with dimension lines and labels, lab manual aesthetic with serif font headers, precise geometric shapes and connecting arrows, data points plotted on graph paper, muted blue-gray palette with red accent markers, structured modular sections separated by thin rules, scientific diagram layout, no photographs, no text no watermark, 3:4 vertical composition, high resolution detailed illustration
+
+  retro_pop:
+    name: "复古波普"
+    keywords: ["波普", "复古", "70s"]
+    prompt: |
+      1970s retro pop art infographic of {TOPIC}, thick black outlines dividing content into Swiss grid sections, high saturation CMYK color blocks (mustard yellow, coral red, teal blue), vintage halftone dot patterns, bold geometric shapes as data containers, pop art style illustrations with Ben-Day dots, newspaper print texture overlay, no text no watermark, 3:4 vertical composition
+
+  scrapbook:
+    name: "手帐拼贴"
+    keywords: ["手帐", "拼贴", "证据板"]
+    prompt: |
+      vintage scrapbook collage infographic of {TOPIC}, cork board background with push pins holding paper elements, masking tape and washi tape strips, layered paper scraps with torn edges, polaroid-style frames, coffee stain marks, newspaper clippings, old stamps and stickers, earth tones with pops of red and yellow, nostalgic evidence board aesthetic, no text no watermark, 3:4 vertical composition
+
+  clay_doodle:
+    name: "陶土手绘"
+    keywords: ["陶土", "手绘", "暖色"]
+    prompt: |
+      hand-drawn clay doodle style infographic of {TOPIC}, warm terracotta and burnt sienna palette, imperfect wobbly lines drawn with colored pencils, childlike doodle illustrations with naive charm, cream kraft paper background, organic shapes and arrows connecting ideas, sketched icons with visible stroke texture, friendly rounded forms, earthy warm tones (#C1694F, #E8D5B7, #8B7355), no text no watermark, 3:4 vertical composition
+
+  vector:
+    name: "矢量插图"
+    keywords: ["矢量", "扁平", "几何"]
+    prompt: |
+      clean vector infographic of {TOPIC}, flat monoline illustration style, geometric simplification of complex concepts, large areas of solid color (#2D3436, #0984E3, #FFEAA7), precise bezier curves, minimal geometric icons, ample white space, modern Swiss design principles, bold color blocking with 3-4 primary colors, razor-sharp edges, no gradients no shadows, no text no watermark, 3:4 vertical composition
+
+# ========================================
+# 场景三：自由生图（freeform）
+# 变量：{DESCRIPTION}（用户描述的英文翻译）
+# ========================================
+freeform:
+  visual_note:
+    name: "视觉笔记"
+    keywords: ["视觉笔记", "手绘笔记", "信息图"]
+    ratios: ["4:3", "16:9"]
+    modifier: |
+      flat design infographic style, hand-drawn sketch quality, clean minimal layout, white background with subtle blue-orange accent palette, pencil texture, sharp clean lines, professional editorial illustration,
+
+  hand_drawn:
+    name: "手绘插画"
+    keywords: ["手绘", "插画", "可爱"]
+    ratios: ["3:4", "1:1"]
+    modifier: |
+      vibrant hand-drawn illustration, warm terracotta and orange palette, cream background with subtle paper texture, colored pencil texture, exaggerated cute proportions, high contrast warm tones, sharp details,
+
+  tech:
+    name: "科技蓝图"
+    keywords: ["科技", "技术", "未来", "赛博"]
+    ratios: ["4:3", "16:9"]
+    modifier: |
+      futuristic technology aesthetic, dark navy background with glowing cyan circuit traces, holographic data visualization, neon accent lighting, sci-fi interface elements,
+
+  blueprint:
+    name: "工程蓝图"
+    keywords: ["蓝图", "工程", "架构"]
+    ratios: ["4:3", "16:9"]
+    modifier: |
+      engineering blueprint style, coordinate grid background in faded cyan, dimension lines and technical annotations, precision drafting aesthetic, blue-white monochrome with red markers,
+
+  sketch:
+    name: "铅笔素描"
+    keywords: ["素描", "线稿", "速写"]
+    ratios: ["4:3", "1:1"]
+    modifier: |
+      pencil sketch on white paper, monochrome graphite shading, loose expressive lines with visible stroke texture, minimal composition, artistic rough draft quality,
+
+  minimal:
+    name: "苹果极简"
+    keywords: ["极简", "简约", "干净"]
+    ratios: ["4:3", "1:1"]
+    modifier: |
+      ultra minimalist design, vast white negative space, single accent color element, geometric precision, clean sans-serif aesthetic, Japanese-inspired simplicity,
+
+# ========================================
+# 场景四：PPT 幻灯片（ppt）
+# direct 模板，变量：{title} {subtitle} {stats}
+# ========================================
+ppt:
+  ppt_retro_pop:
+    name: "复古波普"
+    keywords: ["波普", "复古", "70s"]
+    template: |
+      Retro pop art style PPT slide, 1970s magazine aesthetic, flat design with thick black outlines, cream beige background, bold title text "{title}", subtitle "{subtitle}", key statistics displayed as cards: {stats}, Salmon pink #FF6B6B, sky blue #4ECDC4, mustard yellow #FFD93D, mint green #6BCB77 accents, Geometric decorations: quarter circles, concentric rings, star bursts, Bold sans-serif typography, Professional presentation design, 16:9
+
+  ppt_minimal:
+    name: "极简主义"
+    keywords: ["极简", "简约", "干净"]
+    template: |
+      Minimalist clean design PPT slide, White background, generous whitespace, centered title text "{title}", subtitle "{subtitle}", key stats in simple cards: {stats}, Subtle gray and blue accents, Thin elegant lines, Inter Helvetica font, Professional corporate presentation, Simple elegant layout, 16:9
+
+  ppt_cyberpunk:
+    name: "赛博朋克"
+    keywords: ["赛博", "霓虹", "暗黑"]
+    template: |
+      Cyberpunk neon style PPT slide, Dark charcoal background, title text "{title}" with neon glow effect, subtitle "{subtitle}", key stats: {stats}, Neon colors: magenta #FF00FF, cyan #00FFFF, yellow #FFFF00, Tech grid patterns, circuit decorations, Holographic data panels, glow effects, Futuristic UI elements, Digital presentation, 16:9
+
+  ppt_neo_brutalism:
+    name: "新粗野主义"
+    keywords: ["粗野", "野兽", "粗犷"]
+    template: |
+      Neo-brutalism style PPT slide, raw design, Cream background, bold title text "{title}", subtitle "{subtitle}", key stats displayed: {stats}, Bold primary colors: red #FF4D4D, blue #4D94FF, yellow #FFD93D, Thick 4px black outlines, hard shadows, Brutalist frames, bold typography, Stark contrast, 16:9
+
+  ppt_swiss:
+    name: "瑞士国际"
+    keywords: ["瑞士", "网格", "国际"]
+    template: |
+      Swiss international style PPT slide, brutalist graphic design, Light gray background, bold title text "{title}", subtitle "{subtitle}" with diagonal layout, key stats in geometric blocks: {stats}, High saturation colors: blue #007AFF, green #00994D, yellow #FFF066, purple #9966FF, pink #FF3399, orange #FF8800, Helvetica font, Asymmetric composition, 16:9
+
+  ppt_blueprint:
+    name: "设计蓝图"
+    keywords: ["蓝图", "设计", "Figma"]
+    template: |
+      Design blueprint PPT slide, Figma documentation style, White background with cyan grid lines #66B8CC, title text "{title}", subtitle "{subtitle}", key stats: {stats}, Figma selection boxes with control points, Annotation lines, numbered labels, Technical UI mockup aesthetic, Clean sans-serif Inter font, 16:9
