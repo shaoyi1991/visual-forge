@@ -10,7 +10,7 @@
       "name": "云雾（Gemini）",
       "base_url_env": "LLM_BASE_URL",
       "api_key_env": "LLM_API_KEY",
-      "default_model": "gemini-3.1-flash-image-preview",
+      "default_model": "gpt-image-2",
       "models": [
         {"id": "gemini-3.1-flash-image-preview", "name": "Flash（快）"},
         {"id": "gemini-3-pro-image-preview", "name": "Pro（精）"},
@@ -22,7 +22,7 @@
       "api_url_env": "BANANA_API_URL",
       "gpt_image_url_env": "GRSAI_DRAW_API_URL",
       "api_key_env": "BANANA_API_KEY",
-      "default_model": "nano-banana-2",
+      "default_model": "gpt-image-2",
       "models": [
         {"id": "nano-banana-2", "name": "nano-banana-2"},
         {"id": "nano-banana-pro", "name": "nano-banana-pro"},
