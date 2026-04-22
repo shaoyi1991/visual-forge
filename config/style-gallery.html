@@ -245,6 +245,7 @@ body {
 .theme-blueprint { background: linear-gradient(135deg, #e3f2fd, #bbdefb, #0d47a1); }
 .theme-sketch { background: linear-gradient(135deg, #fafafa, #eee, #bdbdbd); }
 .theme-minimal { background: linear-gradient(135deg, #ffffff, #f5f5f5, #e0e0e0); }
+.theme-raw { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); }
 .theme-ppt_retro_pop { background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #ffd93d); }
 .theme-ppt_minimal { background: linear-gradient(135deg, #ffffff, #f5f5f5); }
 .theme-ppt_cyberpunk { background: linear-gradient(135deg, #1a1a2e, #ff00ff, #00ffff); }
@@ -397,24 +398,22 @@ body {
     <div class="header-inner">
         <div class="header-title">Visual Forge 风格画廊</div>
         <div class="header-controls">
-            <div class="provider-group">
+            <div class="provider-group" id="providerGroup">
                 <span class="provider-label">引擎：</span>
-                <button class="provider-btn active" data-provider="auto">自动</button>
-                <button class="provider-btn" data-provider="yunwu">云雾</button>
-                <button class="provider-btn" data-provider="grsai">grsai</button>
+                <!-- JS 从 engine.json 动态生成 -->
             </div>
             <div class="provider-group" id="modelGroup">
                 <span class="provider-label">模型：</span>
                 <select class="model-select" id="modelSelect"></select>
             </div>
-            <div class="header-stats">28 种风格 · 4 个场景</div>
+            <div class="header-stats">29 种风格 · 4 个场景</div>
         </div>
     </div>
     <div class="scene-tabs" id="sceneTabs">
         <button class="scene-tab active" data-scene="all">全部</button>
         <button class="scene-tab" data-scene="cover">封面 (11)</button>
         <button class="scene-tab" data-scene="infographic">信息图 (5)</button>
-        <button class="scene-tab" data-scene="freeform">自由生图 (6)</button>
+        <button class="scene-tab" data-scene="freeform">自由生图 (7)</button>
         <button class="scene-tab" data-scene="ppt">PPT (6)</button>
     </div>
 </div>
@@ -434,23 +433,64 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Provider Models ──
-// 数据来源：config/engine.json → providers → models
-// 新增/修改模型：编辑 engine.json，然后同步更新此处
-const PROVIDER_MODELS = {
-    auto: [
-        { id: '', name: '默认' },
-    ],
-    yunwu: [
-        { id: 'gemini-3.1-flash-image-preview', name: 'Flash（快）' },
-        { id: 'gemini-3-pro-image-preview', name: 'Pro（精）' },
-    ],
-    grsai: [
-        { id: 'nano-banana-2', name: 'nano-banana-2' },
-        { id: 'nano-banana-pro', name: 'nano-banana-pro' },
-        { id: 'gpt-image-1.5', name: 'gpt-image-1.5' },
-    ],
-};
+// ── 从 engine.json 动态加载 Provider 数据（唯一数据源）──
+let ENGINE_PROVIDERS = {};
+let PROVIDER_MODELS = { auto: [{ id: '', name: '默认' }] };
+
+function loadEngineConfig() {
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'engine.json', false); // 同步 XHR，兼容 file:// 协议
+        xhr.overrideMimeType('application/json');
+        xhr.send();
+        if (xhr.status === 200 || xhr.status === 0) {
+            const cfg = JSON.parse(xhr.responseText);
+            const providers = cfg.providers || {};
+            ENGINE_PROVIDERS = providers;
+            for (const [key, val] of Object.entries(providers)) {
+                PROVIDER_MODELS[key] = (val.models || []).map(m => ({ id: m.id, name: m.name }));
+            }
+            return;
+        }
+    } catch (e) {
+        console.warn('无法加载 engine.json，使用内置 fallback:', e);
+    }
+    // fallback：仅当 engine.json 加载失败时使用
+    ENGINE_PROVIDERS = {
+        yunwu: { name: '云雾（Gemini）' },
+        grsai: { name: 'grsai（nano-banana）' },
+    };
+    PROVIDER_MODELS = {
+        auto: [{ id: '', name: '默认' }],
+        yunwu: [
+            { id: 'gemini-3.1-flash-image-preview', name: 'Flash（快）' },
+            { id: 'gemini-3-pro-image-preview', name: 'Pro（精）' },
+        ],
+        grsai: [
+            { id: 'gpt-image-2', name: 'gpt-image-2' },
+            { id: 'nano-banana-2', name: 'nano-banana-2' },
+            { id: 'nano-banana-pro', name: 'nano-banana-pro' },
+        ],
+    };
+}
+
+function renderProviderButtons() {
+    const group = document.getElementById('providerGroup');
+    let html = '<span class="provider-label">引擎：</span>';
+    html += '<button class="provider-btn active" data-provider="auto">自动</button>';
+    for (const [key, val] of Object.entries(ENGINE_PROVIDERS)) {
+        html += `<button class="provider-btn" data-provider="${key}">${val.name || key}</button>`;
+    }
+    group.innerHTML = html;
+    group.querySelectorAll('.provider-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            group.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentProvider = btn.dataset.provider;
+            updateModelSelect();
+        });
+    });
+}
 
 // ── Style Data ──
 const STYLES = {
@@ -636,6 +676,17 @@ const STYLES = {
     ],
     freeform: [
         {
+            id: 'raw', name: '自由直出', icon: '\u{1F5BC}\u{FE0F}',
+            keywords: ['自由','直出','原始','自定义','raw','直接'],
+            ratio: '4:3', preview: '',
+            prompt: '{DESCRIPTION}',
+            nlExamples: [
+                '/image 帮我生成一张卡萨帝洗衣机官网首页，高端大气上档次',
+                '/image 日落时分的富士山倒影',
+                '/image photo of a red sports car in neon-lit Tokyo street at night',
+            ],
+        },
+        {
             id: 'visual_note', name: '视觉笔记', icon: '\u{1F4DD}',
             keywords: ['视觉笔记','手绘笔记','信息图'],
             ratios: ['4:3','16:9'], preview: 'previews/free_visual_note.jpg',
@@ -807,7 +858,7 @@ function renderCards(filterScene) {
     main.innerHTML = '';
 
     const scenes = filterScene === 'all'
-        ? ['cover', 'infographic', 'freeform', 'ppt']
+        ? ['freeform', 'cover', 'infographic', 'ppt']
         : [filterScene];
 
     scenes.forEach(scene => {
@@ -878,18 +929,32 @@ function openDetail(style, scene) {
         </div>`;
     }
 
-    // Natural language examples (PRIMARY)
-    const nlHtml = (style.nlExamples || []).map(ex =>
-        `<div class="nl-example" onclick="copyText('${ex.replace(/'/g, "\\'")}')" title="点击复制">
+    // Natural language examples (PRIMARY) — 复制时附带引擎/模型参数
+    // 构建参数后缀
+    const paramParts = [];
+    if (currentProvider !== 'auto') paramParts.push(`--provider ${currentProvider}`);
+    if (currentModel) paramParts.push(`--model ${currentModel}`);
+    const paramStr = paramParts.length ? ' ' + paramParts.join(' ') : '';
+
+    const nlHtml = (style.nlExamples || []).map(ex => {
+        const displayText = ex.replace(/^(\/image)/, `$1${paramStr}`);
+        const copyContent = buildCopyText(ex);
+        return `<div class="nl-example" onclick="copyText('${copyContent.replace(/'/g, "\\'")}')" title="点击复制">
             <span class="copy-hint">点击复制</span>
-            ${ex}
-        </div>`
-    ).join('');
+            ${displayText}
+        </div>`;
+    }).join('');
+
+    // 引擎/模型参数提示（始终显示）
+    const providerLabel = currentProvider === 'auto' ? 'auto（自动）' : currentProvider;
+    const modelLabel = currentModel || '默认';
+    const paramHintHtml = `<div style="font-size:12px;color:#667eea;margin-bottom:8px">当前引擎：--provider ${providerLabel}  --model ${modelLabel}</div>`;
 
     document.getElementById('detailBody').innerHTML = `
         ${previewHtml}
         <div class="detail-section">
             <div class="detail-label">怎么用（直接说）</div>
+            ${paramHintHtml}
             ${nlHtml}
         </div>
         <div class="detail-section">
@@ -934,20 +999,24 @@ document.querySelectorAll('.scene-tab').forEach(tab => {
     });
 });
 
-// ── Provider Selector ──
-document.querySelectorAll('.provider-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentProvider = btn.dataset.provider;
-        updateModelSelect();
-    });
-});
+// ── Provider Selector ── （由 renderProviderButtons() 动态绑定）
 
 // ── Model change ──
 document.getElementById('modelSelect').addEventListener('change', (e) => {
     currentModel = e.target.value;
 });
+
+// ── 构建带引擎参数的复制文本 ──
+function buildCopyText(baseExample) {
+    let result = baseExample;
+    const params = [];
+    if (currentProvider !== 'auto') params.push(`--provider ${currentProvider}`);
+    if (currentModel) params.push(`--model ${currentModel}`);
+    if (params.length) {
+        result = result.replace(/^(\/image)/, `$1 ${params.join(' ')}`);
+    }
+    return result;
+}
 
 // ── Copy ──
 function copyCommand(el) {
@@ -985,6 +1054,8 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ── Init ──
+loadEngineConfig();
+renderProviderButtons();
 updateModelSelect();
 renderCards('all');
 </script>

@@ -17,15 +17,15 @@
       ]
     },
     "grsai": {
-      "name": "grsai（nano-banana）",
+      "name": "grsai",
       "api_url_env": "BANANA_API_URL",
+      "gpt_image_url_env": "GRSAI_DRAW_API_URL",
       "api_key_env": "BANANA_API_KEY",
-      "oss_id_env": "BANANA_OSS_ID",
       "default_model": "nano-banana-2",
       "models": [
         {"id": "nano-banana-2", "name": "nano-banana-2"},
         {"id": "nano-banana-pro", "name": "nano-banana-pro"},
-        {"id": "gpt-image-1.5", "name": "gpt-image-1.5"}
+        {"id": "gpt-image-2", "name": "gpt-image-2"}
       ]
     }
   }

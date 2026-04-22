@@ -1,10 +1,10 @@
 # Visual Forge — AI 图像生成引擎
 
-> 一句话出图，28 种预设风格，双引擎自动 fallback，零外部依赖。
+> 一句话出图，29 种预设风格，双引擎自动 fallback，支持图生图。
 >
 > **内部技能名**：`/image`（作为 Claude Code 技能使用时的触发词）
 
-Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复杂的 Prompt 工程封装为 28 种预设风格，通过自然语言驱动，支持封面、信息图、自由生图、PPT 四大场景。内置双引擎自动 fallback 机制，当主引擎不可用时自动切换备用引擎，确保生图成功率。
+Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复杂的 Prompt 工程封装为 29 种预设风格，通过自然语言驱动，支持封面、信息图、自由生图、PPT 四大场景。内置双引擎自动 fallback 机制，当主引擎不可用时自动切换备用引擎，确保生图成功率。支持图生图（参考图风格转换），本地文件通过阿里云 OSS 自动上传。
 
 **28 种预设风格一览：**
 
@@ -15,15 +15,15 @@ Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复
 ## 特性
 
 - **自然语言驱动** — 说"赛博风封面 AI技能"即可出图，自动匹配风格和比例
-- **28 种预设风格** — 封面 11 种、信息图 5 种、自由生图 6 种、PPT 6 种
+- **29 种预设风格** — 封面 11 种、信息图 5 种、自由生图 7 种、PPT 6 种
 - **双引擎 Fallback** — 主引擎失败时自动切换备用引擎
-- **多模型支持** — 可在 CLI 参数、配置文件中灵活切换模型
-- **零外部依赖** — 纯 Python stdlib，不需要 `pip install`
+- **多模型支持** — Gemini、nano-banana、gpt-image 三大模型家族
+- **图生图** — 支持本地文件（自动上传 OSS）和 URL 两种参考图输入
+- **零核心依赖** — 纯 Python stdlib，可选依赖 oss2（图生图本地文件上传）
 - **风格画廊** — 可视化浏览所有风格、查看 Prompt、一键复制调用命令
 - **飞书自动推送** — 生图完成自动推送到飞书群
 
 ---
-
 
 ## 让 AI 帮你安装
 
@@ -40,7 +40,9 @@ Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复
 如果我的环境缺少 Python 3.10+，也请帮我安装。
 ```
 
-> 没有图像生成 API？项目中已配置两个引擎：yunwu（Gemini 代理）和 grsai（nano-banana），只需任选一个申请密钥即可。
+> 没有图像生成 API？项目中已配置两个引擎，只需任选一个申请密钥即可：
+> - **yunwu**（Gemini 代理）：https://yunwu.ai/register?aff=ml8W
+> - **grsai**（nano-banana / gpt-image）：海外 https://grsai.com/zh / 国内直连 https://grsai.ai/zh
 
 ---
 
@@ -67,10 +69,16 @@ cd visual-forge
 LLM_API_KEY=sk-your-api-key
 LLM_BASE_URL=https://yunwu.ai/v1
 
-# ===== 备用引擎（grsai / nano-banana）=====
+# ===== 备用引擎（grsai / nano-banana + gpt-image）=====
 BANANA_API_URL=http://grsai.dakka.com.cn/v1/draw/nano-banana
 BANANA_API_KEY=sk-your-api-key
-BANANA_OSS_ID=your-oss-id
+GRSAI_DRAW_API_URL=https://grsai.dakka.com.cn/v1/draw/completions
+
+# ===== 图生图：阿里云 OSS（可选）=====
+OSS_ACCESS_KEY_ID=your-ak
+OSS_ACCESS_KEY_SECRET=your-sk
+OSS_ENDPOINT=oss-cn-beijing.aliyuncs.com
+OSS_BUCKET=your-bucket
 
 # ===== 输出参数 =====
 VF_PROVIDER=auto          # auto / yunwu / grsai
@@ -106,14 +114,15 @@ python scripts/generate.py \
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `--config` | 引擎配置文件路径 | `config/engine.json` |
-| `--prompt` | 图像描述（英文） | `"a cat reading a book"` |
+| `--prompt` | 图像描述（中英文均可） | `"a cat reading a book"` 或 `"帮我生成一张高端洗衣机官网首页"` |
 | `--style` | 预设风格 ID | `cyberpunk`, `kawaii`, `sketch` |
 | `--provider` | 指定引擎（覆盖环境变量） | `auto`, `yunwu`, `grsai` |
 | `--model` | 指定模型（覆盖默认） | `gemini-3-pro-image-preview` |
 | `--out` | 输出文件路径 | `output.jpg` |
 | `--aspect-ratio` | 画面比例 | `4:3`, `3:4`, `16:9` |
 | `--image-size` | 分辨率 | `1K`, `2K`, `4K` |
-| `--reference` | 参考图路径（支持多张） | `ref1.jpg ref2.jpg` |
+| `--reference` | 本地参考图路径（自动上传 OSS） | `ref1.jpg ref2.jpg` |
+| `--reference-url` | 参考图 URL（grsai 引擎） | `https://example.com/ref.png` |
 | `--prompt-file` | Prompt 文件（YAML 头部） | `prompt.md` |
 
 ### 优先级规则
@@ -183,12 +192,13 @@ python scripts/generate.py --config config/engine.json \
 | `clay_doodle` | 陶土手绘 | 3:4 | 陶土/手绘/暖色 |
 | `vector` | 矢量插图 | 3:4 | 矢量/扁平/几何 |
 
-### 场景三：自由生图 Freeform（6 种）
+### 场景三：自由生图 Freeform（7 种）
 
-自由描述任意图片，风格作为修饰词叠加。用户的描述会追加到 `modifier` 之后。
+自由描述任意图片。**不指定风格时默认使用 `raw`（自由直出），直接用用户原始描述生成，不做任何风格修饰。** 用户指定风格关键词时，风格作为修饰词叠加到 `modifier` 之后。
 
 | 风格 ID | 名称 | 支持比例 | 关键词 |
 |---------|------|---------|--------|
+| `raw` | 自由直出 | 4:3 | 自由/直出/原始/自定义/raw/直接（默认，不指定风格时自动使用） |
 | `visual_note` | 视觉笔记 | 4:3, 16:9 | 视觉笔记/手绘笔记/信息图 |
 | `hand_drawn` | 手绘插画 | 3:4, 1:1 | 手绘/插画/可爱 |
 | `tech` | 科技蓝图 | 4:3, 16:9 | 科技/技术/未来/赛博 |
@@ -211,6 +221,46 @@ python scripts/generate.py --config config/engine.json \
 
 ---
 
+## 技能调用方式（推荐）
+
+任何支持技能的 AI 智能体（Claude Code、Cursor、Copilot 等）均可通过自然语言调用。触发词：`/image`。支持中文描述，支持 `@引用` 本地文件作为参考图。
+
+### 比例规则
+
+在描述中写明比例即可，自动覆盖风格默认比例：
+
+```
+/image 帮我生成一张官网首页，高端大气。16:9   → 自动提取 16:9，覆盖默认 4:3
+/image 3:4 小红书封面 可爱猫咪                → 竖版 3:4
+不写比例 → 使用风格默认比例
+```
+
+### 文生图
+
+```
+/image --provider grsai --model gpt-image-2 帮我生成一张卡萨帝洗衣机官网首页，高端大气上档次
+```
+
+不指定 `--provider` / `--model` 时使用默认引擎。不指定风格关键词时自动使用 **raw（自由直出）** 模式，直接用用户原始描述生成。
+
+### 图生图（参考图风格转换）
+
+```
+/image --provider grsai --model gpt-image-2 @/path/to/ref.png 将这张图换成明亮风格，主体元素不变
+```
+
+用 `@/路径` 引用本地文件，技能会自动上传并作为参考图传入。
+
+### 指定风格
+
+```
+/image 赛博风封面 AI技能              → 匹配 cyberpunk 风格
+/image 手绘一只在雨中撑伞的猫         → 匹配 hand_drawn 风格
+/image 信息图 人工智能发展史           → 匹配 tech_blueprint 风格
+```
+
+---
+
 ## 双引擎架构
 
 ```
@@ -219,8 +269,9 @@ python scripts/generate.py --config config/engine.json \
   ├─ VF_PROVIDER=auto（默认）
   │   ├─ 尝试 yunwu（Gemini generateContent API）
   │   │   └─ 重试 2 次 → 全部失败 → fallback
-  │   └─ 尝试 grsai（nano-banana REST API）
-  │       └─ 重试 1 次 → 失败 → 报错
+  │   └─ 尝试 grsai（统一引擎，按模型自动路由）
+  │       ├─ gpt-image 前缀 → GRSAI_DRAW_API_URL
+  │       └─ nano-banana*  → BANANA_API_URL
   │
   ├─ VF_PROVIDER=yunwu → 仅用云雾（不 fallback）
   └─ VF_PROVIDER=grsai → 仅用 grsai（不 fallback）
@@ -228,11 +279,12 @@ python scripts/generate.py --config config/engine.json \
 
 | 特性 | yunwu（云雾） | grsai |
 |------|-------------|-------|
-| 协议 | Gemini generateContent REST | nano-banana 专有 REST |
-| 认证 | `x-goog-api-key` | `Bearer` + `oss-id` |
+| 协议 | Gemini generateContent REST | nano-banana REST / gpt-image REST |
+| 认证 | `x-goog-api-key` / `Bearer` | `Bearer` |
+| 模型 | gemini-3.1-flash / gemini-3-pro | nano-banana-2 / nano-banana-pro / gpt-image-2 |
+| 参考图 | 本地文件 base64 inlineData | URL（本地文件自动上传 OSS） |
 | 响应格式 | base64 inlineData（解码即图） | JSON → 下载 URL |
-| 输出质量 | 高 | 中 |
-| 平均耗时 | 30-80s | 10-20s |
+| 平均耗时 | 30-80s | nano-banana 70-120s / gpt-image 30-60s |
 
 ---
 
@@ -291,7 +343,7 @@ cover:
 - **信息图**用 `{TOPIC}` 变量
 - **自由生图**用 `modifier` 字段（不是 `prompt`），用户的描述会追加到 modifier 之后
 - **PPT** 用 `{title}`, `{subtitle}`, `{stats}` 变量
-- Prompt **必须是英文**
+- Prompt **模板必须是英文**（用户输入中英文均可，技能会保持原语言不翻译）
 - 必须包含 `no text no watermark`
 - 建议在末尾注明比例（如 `4:3 composition`）
 
@@ -393,12 +445,14 @@ visual-forge/
 
 | 决策 | 原因 |
 |------|------|
-| **Prompt 全英文** | 主流图像模型（Gemini、GPT-image）对英文理解远优于中文 |
+| **Prompt 模板英文，用户输入保持原语言** | 预设风格模板用英文（模型理解更准确），用户输入中英文均可，不翻译 |
 | **prompts.yaml 而非 JSON** | YAML 支持多行字符串，写 Prompt 更自然 |
-| **零外部依赖** | stdlib-only 意味着开箱即用，不需要 `pip install` |
+| **零核心依赖** | stdlib-only 意味着开箱即用；oss2 为可选依赖（图生图本地文件上传） |
 | **engine.json 存模型列表** | 模型变动频繁，独立于密钥管理 |
 | **.env 只存密钥和 URL** | 敏感信息与业务配置分离，方便 .gitignore |
 | **双引擎 auto fallback** | 单引擎不可用时自动切换，提高生图成功率 |
+| **grsai 统一函数** | nano-banana 和 gpt-image 请求格式一致，按模型前缀自动路由端点 |
+| **OSS 可选降级** | 未配置 OSS 时跳过本地参考图上传，继续文生图，不报错 |
 
 ---
 

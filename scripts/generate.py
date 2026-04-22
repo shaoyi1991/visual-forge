@@ -79,7 +79,7 @@ def _load_dotenv(dotenv_path: str | pathlib.Path):
 def _init_dotenv():
     """从项目根目录加载 .env"""
     script_dir = pathlib.Path(__file__).resolve().parent
-    # scripts/ → visual-forge 根目录
+    # scripts/ → image/ → skills/ → .claude/ → 项目根
     project_root = script_dir.parent.parent
     dotenv = project_root / ".env"
     if dotenv.exists():
@@ -600,40 +600,94 @@ def _generate_via_gemini(prompt, out_path, aspect_ratio, image_size, ref_images,
 
 
 # ---------------------------------------------------------------------------
-# 引擎二：grsai（nano-banana）
+# 本地参考图上传（阿里云 OSS）
 # ---------------------------------------------------------------------------
 
-def _generate_via_banana(prompt, out_path, aspect_ratio, image_size, grsai_model=None):
-    """grsai nano-banana 生图路径，返回 (success, saved_paths, debug_info)"""
-    api_url = os.getenv("BANANA_API_URL")
+def _upload_to_oss(file_path):
+    """上传本地图片到阿里云 OSS，返回公开访问 URL。失败返回 None。"""
+    try:
+        import oss2
+    except ImportError:
+        _eprint("oss2 未安装，无法上传本地参考图到 OSS（pip install oss2）")
+        return None
+    ak = os.getenv("OSS_ACCESS_KEY_ID")
+    sk = os.getenv("OSS_ACCESS_KEY_SECRET")
+    endpoint = os.getenv("OSS_ENDPOINT")
+    bucket_name = os.getenv("OSS_BUCKET")
+    if not all([ak, sk, endpoint, bucket_name]):
+        _eprint("OSS 环境变量未全部配置（需 OSS_ACCESS_KEY_ID/SECRET/ENDPOINT/BUCKET），跳过本地上传")
+        return None
+    date_str = time.strftime('%Y%m%d')
+    fname = pathlib.Path(file_path).name
+    key = f"visual-forge/ref/{date_str}/{fname}"
+    try:
+        auth = oss2.Auth(ak, sk)
+        bkt = oss2.Bucket(auth, endpoint, bucket_name)
+        bkt.put_object_from_file(key, str(file_path))
+        url = f"https://{bucket_name}.{endpoint}/{key}"
+        _eprint(f"OSS 上传成功：{url}")
+        return url
+    except Exception as e:
+        _eprint(f"OSS 上传失败：{e}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# 引擎二：grsai 统一引擎（nano-banana + gpt-image）
+# ---------------------------------------------------------------------------
+
+def _generate_via_grsai(prompt, out_path, aspect_ratio, image_size,
+                        model=None, ref_urls=None):
+    """grsai 统一生图路径，按模型自动路由端点。返回 (success, saved_paths, debug_info)"""
     api_key = os.getenv("BANANA_API_KEY")
-    oss_id = os.getenv("BANANA_OSS_ID")
-    model = grsai_model or os.getenv("BANANA_MODEL", "nano-banana-2")
+    if not api_key:
+        return False, [], "BANANA_API_KEY 未配置"
 
-    if not api_url or not api_key or not oss_id:
-        return False, [], "grsai 环境变量未配置（BANANA_API_URL/BANANA_API_KEY/BANANA_OSS_ID）"
+    model = model or "nano-banana-2"
+    is_gpt_image = model.startswith("gpt-image")
 
+    # 端点路由
+    if is_gpt_image:
+        api_url = os.getenv("GRSAI_DRAW_API_URL")
+        if not api_url:
+            return False, [], "GRSAI_DRAW_API_URL 未配置"
+    else:
+        api_url = os.getenv("BANANA_API_URL")
+        if not api_url:
+            return False, [], "BANANA_API_URL 未配置"
+
+    # 认证头（统一 Bearer）
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
-        "oss-id": oss_id,
-        "oss-path": f"{model}/{time.strftime('%Y%m%d')}/",
     }
+
+    # 请求体构建
     body = {
         "model": model,
         "prompt": prompt,
-        "imageSize": image_size or "2K",
-        "aspectRatio": aspect_ratio,
+        "shutProgress": False,
     }
+    if is_gpt_image:
+        # gpt-image 用 size 字段
+        size_map = {"4:3": "3:2", "3:4": "2:3", "16:9": "16:9", "1:1": "1:1"}
+        body["size"] = size_map.get(aspect_ratio, "auto")
+    else:
+        # nano-banana 用 aspectRatio + imageSize
+        body["aspectRatio"] = aspect_ratio
+        body["imageSize"] = image_size or "2K"
+    if ref_urls:
+        body["urls"] = ref_urls
+
+    _eprint(f"grsai 请求：endpoint={'gpt-image' if is_gpt_image else 'nano-banana'} model={model}")
 
     try:
         req = urllib.request.Request(
             api_url,
-            data=json.dumps(body).encode("utf-8"),
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
             headers=headers,
             method="POST",
         )
-        # grsai 需要 SSL 跳过验证
         context = ssl._create_unverified_context()
         timeout_s = int(os.getenv("LLM_TIMEOUT", "120"))
 
@@ -661,39 +715,49 @@ def _generate_via_banana(prompt, out_path, aspect_ratio, image_size, grsai_model
                 return False, [], f"grsai 响应解析失败，无有效 JSON。Raw: {response_text[:300]}"
 
             final_result = json_objs[-1]
+
+            # 兼容两种响应格式：直接返回 / webhook data 包装
+            results = final_result.get("results", [])
             status = final_result.get("status")
+            progress = final_result.get("progress", 0)
+            if not results:
+                data = final_result.get("data", {})
+                if isinstance(data, dict):
+                    results = data.get("results", [])
+                    progress = data.get("progress", 0)
 
-            if status == "succeeded" or (final_result.get("progress") and int(str(final_result.get("progress", 0))) >= 100):
-                results = final_result.get("results", [])
-                if not results:
-                    return False, [], "grsai 生成成功但未返回图片 URL"
+            # 判断成功
+            succeeded = (status == "succeeded"
+                         or (isinstance(progress, (int, str)) and int(str(progress)) >= 100)
+                         or bool(results))
 
-                img_url = results[0].get("url") or results[0].get("uri")
-                if not img_url:
-                    return False, [], "grsai 返回的图片 URL 为空"
+            if not succeeded and not results:
+                error_msg = final_result.get("error") or final_result.get("message") or final_result.get("msg") or "未知错误"
+                return False, [], f"grsai API 错误: {error_msg} (status={status}, progress={progress})"
 
-                # 下载图片
-                img_context = ssl._create_unverified_context()
-                with urllib.request.urlopen(img_url, timeout=60, context=img_context) as dl_resp:
-                    img_data = dl_resp.read()
+            img_url = results[0].get("url") or results[0].get("uri")
+            if not img_url:
+                return False, [], "grsai 返回的图片 URL 为空"
 
-                target = pathlib.Path(out_path).expanduser()
-                _ensure_parent(target)
+            # 下载图片
+            img_context = ssl._create_unverified_context()
+            with urllib.request.urlopen(img_url, timeout=60, context=img_context) as dl_resp:
+                img_data = dl_resp.read()
 
-                # 如果需要格式转换
-                target_ext = target.suffix.lower()
-                jpg_quality = int(os.getenv("VF_JPG_QUALITY", "85"))
+            target = pathlib.Path(out_path).expanduser()
+            _ensure_parent(target)
 
-                if target_ext in (".jpg", ".jpeg") and jpg_quality:
-                    if not _try_convert_image_bytes(img_data, target, jpg_quality):
-                        _write_bytes(target, img_data)
-                else:
+            target_ext = target.suffix.lower()
+            jpg_quality = int(os.getenv("VF_JPG_QUALITY", "85"))
+
+            if target_ext in (".jpg", ".jpeg") and jpg_quality:
+                if not _try_convert_image_bytes(img_data, target, jpg_quality):
                     _write_bytes(target, img_data)
-
-                return True, [target], {"engine": "grsai", "status": status}
             else:
-                error_msg = final_result.get("error") or final_result.get("message") or final_result.get("msg")
-                return False, [], f"grsai API 错误: {error_msg} (status={status})"
+                _write_bytes(target, img_data)
+
+            engine_label = "grsai-gpt-image" if is_gpt_image else "grsai"
+            return True, [target], {"engine": engine_label, "status": status or "succeeded", "model": model}
 
     except Exception as e:
         return False, [], f"grsai 请求异常: {e}"
@@ -711,7 +775,8 @@ def main():
     ap.add_argument("--config", default=None, help="配置文件路径")
     ap.add_argument("--prompt-file", default=None, help="提示词文件路径（带 YAML 头部）")
     ap.add_argument("--prompt", default=None, help="提示词文本")
-    ap.add_argument("--reference", nargs="*", default=[], help="参考图路径")
+    ap.add_argument("--reference", nargs="*", default=[], help="参考图路径（本地文件，用于 yunwu/Gemini）")
+    ap.add_argument("--reference-url", nargs="*", default=[], help="参考图 URL（用于 gpt-image 图生图）")
     ap.add_argument("--out", default=None, help="输出图片路径")
     ap.add_argument("--aspect-ratio", default=None, help="图片比例（优先从 prompt 文件或 --style 读取）")
     ap.add_argument("--image-size", default=None, help="分辨率（优先从 prompt 文件读取）")
@@ -788,28 +853,29 @@ def main():
                     available.extend(f"{scene_name}/{k}" for k in scene_data.keys())
             raise SystemExit(f"未找到风格 '{args.style}'，可用风格：{', '.join(available[:20])}...")
 
-        # 获取风格 prompt 模板
-        style_prompt = style_found.get("prompt") or style_found.get("modifier") or style_found.get("template") or ""
+        # 获取风格比例
         style_ratio = style_found.get("ratio") or (style_found.get("ratelist", ["4:3"])[0] if style_found.get("ratelist") else None)
 
         if style_ratio:
             _eprint(f"风格比例：{style_ratio}")
 
-        # 将用户的 --prompt 内容替换到模板变量中
+        # 区分完整模板（prompt/template）和前缀修饰词（modifier）
+        full_template = style_found.get("prompt") or style_found.get("template") or ""
+        modifier = style_found.get("modifier") or ""
         user_desc = (args.prompt or "").strip()
-        if style_prompt:
-            # 尝试替换所有已知变量
+
+        if full_template:
+            # 完整模板：替换变量 {METAPHOR}/{TOPIC}/{DESCRIPTION} 等
             for var in ("{METAPHOR}", "{TOPIC}", "{DESCRIPTION}", "{title}", "{subtitle}", "{stats}"):
-                if var in style_prompt:
-                    style_prompt = style_prompt.replace(var, user_desc)
+                if var in full_template:
+                    full_template = full_template.replace(var, user_desc)
                     break
-            args.prompt = style_prompt
-        elif user_desc:
-            # modifier 模式：modifier + 用户描述
-            modifier = style_found.get("modifier", "")
-            args.prompt = f"{modifier} {user_desc}, no text no watermark"
+            args.prompt = full_template
+        elif modifier:
+            # modifier 模式：modifier + 用户描述（保持原语言）
+            args.prompt = f"{modifier} {user_desc}, no text no watermark" if user_desc else modifier
         else:
-            args.prompt = style_prompt
+            args.prompt = user_desc
 
     # 解析 prompt
     prompt_text = ""
@@ -825,10 +891,10 @@ def main():
     if not prompt_text.strip():
         raise SystemExit("提示词为空：请提供 --prompt-file 或 --prompt")
 
-    # 确定比例（优先级：prompt file > --style > --aspect-ratio > 默认 4:3）
+    # 确定比例（优先级：prompt file > --aspect-ratio（用户显式）> --style > 默认 4:3）
     aspect_ratio = (str(meta.get("aspect_ratio") or "").strip()
-                    or style_ratio
                     or (str(args.aspect_ratio or "").strip())
+                    or style_ratio
                     or "4:3")
 
     # 确定分辨率
@@ -861,7 +927,7 @@ def main():
     provider = (args.provider or os.getenv("VF_PROVIDER", "auto")).strip().lower()
     _eprint(f"引擎配置：provider={provider} base_url={base_url} model={model}")
     _eprint(f"api_key={_mask(api_key)} aspect_ratio={aspect_ratio} image_size={image_size or 'DEFAULT'}")
-    _eprint(f"prompt 前 100 字：{prompt_text[:100]}...")
+    _eprint(f"prompt（{len(prompt_text)}字）：{prompt_text[:200]}{'...' if len(prompt_text) > 200 else ''}")
 
     success = False
     saved_paths: list[pathlib.Path] = []
@@ -889,18 +955,27 @@ def main():
                 raise SystemExit(f"yunwu 引擎失败且不 fallback：{info}")
 
     if not success and provider in ("auto", "grsai"):
-        _eprint(f"尝试 grsai fallback 引擎...")
-        ok, paths, info = _generate_via_banana(
+        model_to_use = args.model or grsai_default_model
+        # 合并 URL 参考 + 本地文件 OSS 上传
+        all_urls = list(args.reference_url or [])
+        for img_path in ref_images:
+            url = _upload_to_oss(img_path)
+            if url:
+                all_urls.append(url)
+            else:
+                _eprint(f"警告：本地参考图上传失败 {img_path}，已跳过，继续文生图")
+        _eprint(f"尝试 grsai 引擎 (model={model_to_use})...")
+        ok, paths, info = _generate_via_grsai(
             prompt=prompt_text, out_path=out_path,
             aspect_ratio=aspect_ratio, image_size=image_size,
-            grsai_model=grsai_default_model,
+            model=model_to_use, ref_urls=all_urls or None,
         )
         if ok:
             success = True
             saved_paths = paths
             debug_info = info
         else:
-            _eprint(f"grsai 也失败：{info}")
+            _eprint(f"grsai 失败：{info}")
 
     if not success:
         raise SystemExit("所有生图引擎均失败")

@@ -127,6 +127,13 @@ infographic:
 # 变量：{DESCRIPTION}（用户描述的英文翻译）
 # ========================================
 freeform:
+  raw:
+    name: "自由直出"
+    keywords: ["自由", "直出", "原始", "自定义", "raw", "直接"]
+    ratio: "4:3"
+    prompt: |
+      {DESCRIPTION}
+
   visual_note:
     name: "视觉笔记"
     keywords: ["视觉笔记", "手绘笔记", "信息图"]

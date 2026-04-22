@@ -4,7 +4,7 @@
 
 ## 项目概要
 
-Visual Forge 是一个零外部依赖的 AI 图像生成引擎。Python stdlib 实现，通过自然语言驱动，支持 28 种预设风格和双引擎 fallback。
+Visual Forge 是一个零核心依赖的 AI 图像生成引擎。Python stdlib 实现，通过自然语言驱动，支持 28 种预设风格和双引擎 fallback。支持图生图（本地文件自动上传 OSS）。
 
 ## 安装步骤（AI 助手执行）
 
@@ -33,17 +33,28 @@ cp .env.example .env
 
 然后引导用户填入至少一组 API 密钥。两种引擎只需配置一种：
 
+- **yunwu** 注册地址：https://yunwu.ai/register?aff=ml8W
+- **grsai** 注册地址：海外 https://grsai.com/zh / 国内直连 https://grsai.ai/zh
+
 **方案 A：yunwu（Gemini 代理，推荐）**
 ```bash
 LLM_API_KEY=sk-xxx        # 必填
 LLM_BASE_URL=https://yunwu.ai/v1  # 默认值，一般不改
 ```
 
-**方案 B：grsai（nano-banana，备用）**
+**方案 B：grsai（nano-banana / gpt-image，备用）**
 ```bash
 BANANA_API_URL=http://grsai.dakka.com.cn/v1/draw/nano-banana  # 默认值
 BANANA_API_KEY=sk-xxx      # 必填
-BANANA_OSS_ID=xxx          # 必填
+GRSAI_DRAW_API_URL=https://grsai.dakka.com.cn/v1/draw/completions  # gpt-image 端点
+```
+
+**可选：图生图 OSS 上传（不配置则跳过参考图上传，继续文生图）**
+```bash
+OSS_ACCESS_KEY_ID=xxx
+OSS_ACCESS_KEY_SECRET=xxx
+OSS_ENDPOINT=oss-cn-beijing.aliyuncs.com
+OSS_BUCKET=your-bucket
 ```
 
 ### 4. 验证安装
@@ -72,9 +83,9 @@ python -c "import webbrowser; webbrowser.open('config/style-gallery.html')"
 
 ## 技术栈
 
-- Python 3.10+（stdlib only，无 pip install 依赖）
+- Python 3.10+（stdlib only，可选 oss2 用于图生图本地上传）
 - Gemini generateContent API（yunwu 代理）
-- grsai nano-banana API（备用引擎）
+- grsai 统一引擎（nano-banana + gpt-image）
 
 ## 关键文件
 
@@ -113,8 +124,14 @@ python scripts/generate.py \
 
 `VF_PROVIDER=auto`（默认）时：
 1. 先尝试 yunwu（Gemini API），重试 2 次
-2. 全部失败后 fallback 到 grsai（nano-banana），重试 1 次
+2. 全部失败后 fallback 到 grsai 统一引擎（按模型名自动路由 nano-banana 或 gpt-image 端点），重试 1 次
 3. 都失败则报错
+
+### 图生图（参考图）
+
+- `--reference`：本地文件路径（yunwu 用 base64 inlineData，grsai 自动上传 OSS 获取 URL）
+- `--reference-url`：已有图片 URL（grsai 专用）
+- OSS 未配置时，本地参考图上传跳过，继续执行文生图
 
 ### --style 参数
 
@@ -140,7 +157,7 @@ python scripts/generate.py \
 - 信息图用 `{TOPIC}` 变量
 - 自由生图用 `modifier` 字段（用户描述追加在后面）
 - PPT 用 `{title}`, `{subtitle}`, `{stats}` 变量
-- Prompt 必须英文，必须包含 `no text no watermark`
+- Prompt 模板必须是英文（keywords 匹配和模板渲染使用英文），用户输入中英文均可不翻译
 
 ### 添加新引擎（Provider）
 
@@ -152,6 +169,6 @@ python scripts/generate.py \
 ## 注意事项
 
 - `.env` 文件包含 API 密钥，已被 `.gitignore` 忽略，**禁止提交**
-- 所有 Prompt 模板必须英文（AI 图像模型对英文理解更好）
+- Prompt **模板**必须是英文（AI 图像模型对英文理解更好），但用户输入描述保持原语言不翻译
 - `config/previews/` 中的预览图需要包含在 Git 中（!config/previews/ 在 .gitignore 中有例外规则）
 - 风格画廊 HTML 中的 STYLES 数据需要与 prompts.yaml 保持同步
