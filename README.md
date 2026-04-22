@@ -241,6 +241,8 @@ python scripts/generate.py --config config/engine.json \
 /image --provider grsai --model gpt-image-2 帮我生成一张卡萨帝洗衣机官网首页，高端大气上档次
 ```
 
+![文生图示例](config/previews/example_text2img.png)
+
 不指定 `--provider` / `--model` 时使用默认引擎。不指定风格关键词时自动使用 **raw（自由直出）** 模式，直接用用户原始描述生成。
 
 ### 图生图（参考图风格转换）
@@ -248,6 +250,8 @@ python scripts/generate.py --config config/engine.json \
 ```
 /image --provider grsai --model gpt-image-2 @/path/to/ref.png 将这张图换成明亮风格，主体元素不变
 ```
+
+![图生图示例](config/previews/example_img2img.png)
 
 用 `@/路径` 引用本地文件，技能会自动上传并作为参考图传入。
 
