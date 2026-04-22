@@ -633,6 +633,131 @@ def _upload_to_oss(file_path):
 
 
 # ---------------------------------------------------------------------------
+# 引擎 1.5：yunwu OpenAI Images 格式（gpt-image-2 等 dall-e-3 兼容模型）
+# ---------------------------------------------------------------------------
+
+def _generate_via_openai_images(prompt, out_path, aspect_ratio,
+                                 base_url, model, api_key, timeout_s):
+    """yunwu / OpenAI Images 兼容路径（dall-e-3 格式）。返回 (success, saved_paths, debug_info)
+
+    响应格式：{data: [{b64_json: "..."}], ...}
+    先尝试 urllib（清代理），失败降级 curl 子进程。
+    """
+    import subprocess
+    import tempfile
+
+    url = base_url.rstrip("/") + "/images/generations"
+
+    # gpt-image-2 支持的尺寸
+    size_map = {
+        "4:3": "1536x1024",
+        "3:4": "1024x1536",
+        "16:9": "1792x1024",
+        "1:1": "1024x1024",
+    }
+    size = size_map.get(aspect_ratio, "auto")
+
+    body = {
+        "model": model,
+        "prompt": prompt,
+        "size": size,
+        "quality": "medium",
+        "n": 1,
+    }
+
+    effective_timeout = max(timeout_s, 180)
+    _eprint(f"yunwu OpenAI Images 请求：url={url} model={model} size={size} timeout={effective_timeout}s")
+
+    resp_text = None
+
+    # === 尝试 1：Python urllib（清除代理环境变量） ===
+    try:
+        saved_proxies = {}
+        for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY"):
+            if k in os.environ:
+                saved_proxies[k] = os.environ.pop(k)
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+            method="POST",
+        )
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=effective_timeout, context=context) as resp:
+            resp_text = resp.read().decode("utf-8", "ignore")
+
+        os.environ.update(saved_proxies)
+
+    except Exception as e:
+        # 恢复代理
+        for k, v in saved_proxies.items():
+            os.environ[k] = v
+        _eprint(f"yunwu urllib 失败，降级 curl：{e}")
+
+        # === 尝试 2：curl 子进程 ===
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w", encoding="utf-8") as f:
+                json.dump(body, f, ensure_ascii=False)
+                body_file = f.name
+
+            curl_env = os.environ.copy()
+            for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY"):
+                curl_env.pop(k, None)
+
+            cmd = [
+                "curl", "-s", "-X", "POST", url,
+                "-H", "Content-Type: application/json",
+                "-H", "Accept: application/json",
+                "-H", f"Authorization: Bearer {api_key}",
+                "-d", f"@{body_file}",
+                "--max-time", str(effective_timeout),
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=effective_timeout + 10, env=curl_env)
+            os.unlink(body_file)
+
+            if result.returncode != 0:
+                return False, [], f"yunwu curl 失败：exit={result.returncode} {(result.stderr or '')[:300]}"
+
+            resp_text = result.stdout
+
+        except FileNotFoundError:
+            return False, [], "curl 未找到，请安装 curl"
+        except subprocess.TimeoutExpired:
+            return False, [], f"yunwu curl 超时（{effective_timeout}s）"
+        except Exception as e2:
+            return False, [], f"yunwu curl 异常：{e2}"
+
+    if not resp_text:
+        return False, [], "yunwu 未收到任何响应"
+
+    # 解析 JSON 响应：{data: [{b64_json: "..."}]}
+    try:
+        resp_json = json.loads(resp_text)
+    except json.JSONDecodeError:
+        return False, [], f"yunwu 响应非 JSON：{resp_text[:300]}"
+
+    data_list = resp_json.get("data")
+    if not isinstance(data_list, list) or not data_list:
+        return False, [], f"yunwu 响应无 data 字段：{str(resp_json)[:300]}"
+
+    b64 = data_list[0].get("b64_json")
+    if not b64:
+        return False, [], "yunwu 响应 data[0] 中无 b64_json"
+
+    img_data = base64.b64decode(b64)
+    target = pathlib.Path(out_path).expanduser()
+    _ensure_parent(target)
+    _write_bytes(target, img_data)
+
+    return True, [target], {"engine": "yunwu-openai-images", "model": model, "size": size}
+
+
+# ---------------------------------------------------------------------------
 # 引擎二：grsai 统一引擎（nano-banana + gpt-image）
 # ---------------------------------------------------------------------------
 
@@ -934,17 +1059,29 @@ def main():
     debug_info: dict = {}
 
     if provider in ("auto", "yunwu"):
-        _eprint(f"尝试 yunwu 引擎...")
-        ok, paths, info = _generate_via_gemini(
-            prompt=prompt_text, out_path=out_path, aspect_ratio=aspect_ratio,
-            image_size=image_size, ref_images=ref_images,
-            base_url=base_url, model=model, api_key=api_key,
-            timeout_s=timeout_s, max_retries=max_retries,
-            retry_backoff_s=retry_backoff_s, auth_mode=auth_mode,
-            api_version=api_version, output_format=output_format,
-            jpg_quality=jpg_quality, save_response_json=save_response_json,
-            save_thought_images=save_thought_images, prompt_file=prompt_file,
-        )
+        is_openai_model = model.startswith("gpt-image")
+        if is_openai_model:
+            # gpt-image-2 等模型走 OpenAI Images 兼容格式（dall-e-3）
+            _eprint(f"尝试 yunwu 引擎（OpenAI Images 格式）...")
+            ok, paths, info = _generate_via_openai_images(
+                prompt=prompt_text, out_path=out_path,
+                aspect_ratio=aspect_ratio,
+                base_url=base_url, model=model, api_key=api_key,
+                timeout_s=timeout_s,
+            )
+        else:
+            # Gemini 原生模型走 generateContent 格式
+            _eprint(f"尝试 yunwu 引擎（Gemini 格式）...")
+            ok, paths, info = _generate_via_gemini(
+                prompt=prompt_text, out_path=out_path, aspect_ratio=aspect_ratio,
+                image_size=image_size, ref_images=ref_images,
+                base_url=base_url, model=model, api_key=api_key,
+                timeout_s=timeout_s, max_retries=max_retries,
+                retry_backoff_s=retry_backoff_s, auth_mode=auth_mode,
+                api_version=api_version, output_format=output_format,
+                jpg_quality=jpg_quality, save_response_json=save_response_json,
+                save_thought_images=save_thought_images, prompt_file=prompt_file,
+            )
         if ok:
             success = True
             saved_paths = paths

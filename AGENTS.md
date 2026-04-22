@@ -123,9 +123,18 @@ python scripts/generate.py \
 ### 双引擎 Fallback
 
 `VF_PROVIDER=auto`（默认）时：
-1. 先尝试 yunwu（Gemini API），重试 2 次
+1. 先尝试 yunwu：
+   - `gpt-image-*` 模型 → OpenAI Images 格式（`/v1/images/generations`，dall-e-3 兼容）
+   - 其他模型（Gemini 系列）→ Gemini 原生格式（`/v1/models/{model}:generateContent`）
+   - 重试 2 次
 2. 全部失败后 fallback 到 grsai 统一引擎（按模型名自动路由 nano-banana 或 gpt-image 端点），重试 1 次
 3. 都失败则报错
+
+### yunwu 代理兼容
+
+Python `urllib` 在系统代理（HTTP_PROXY）环境下可能连接断开。`_generate_via_openai_images` 函数自动处理：
+- 先清除代理变量尝试 urllib
+- 失败则降级 curl 子进程（同样清代理）
 
 ### 图生图（参考图）
 
