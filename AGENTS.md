@@ -57,8 +57,42 @@ OSS_ENDPOINT=oss-cn-beijing.aliyuncs.com
 OSS_BUCKET=your-bucket
 ```
 
-### 4. 验证安装
+### 4. 注册为技能（必须执行）
 
+> ⚠️ 仅仅克隆仓库 + 配置环境变量 ≠ 安装完成。必须执行此步骤，否则用户只能手动拼命令行调用，无法通过自然语言触发。
+
+#### Claude Code
+
+将项目文件放置到当前项目的 `.claude/skills/image/` 目录。推荐直接克隆到技能目录：
+
+```bash
+# 方式 A：直接克隆到技能目录（推荐，一步到位）
+git clone https://github.com/shaoyi1991/visual-forge.git .claude/skills/image
+
+# 方式 B：如果已克隆到其他位置，复制过去
+mkdir -p .claude/skills/image
+cp -r visual-forge/* .claude/skills/image/
+```
+
+注册完成后，用户可通过 `/image` 或自然语言（"画图""封面""信息图"等）触发技能。
+
+**验证注册**：在 Claude Code 中输入 `/image`，确认出现帮助菜单即为成功。
+
+#### 其他 AI 编程助手
+
+如果当前 AI 平台支持技能/插件/工具注册机制，请按平台要求将 Visual Forge 注册为可用技能：
+- `SKILL.md` — 技能定义文件（入口描述、触发条件、执行流程）
+- `scripts/generate.py` — 执行入口
+- `config/` — 配置目录（引擎、风格、画廊）
+
+一般原则：让 AI 智能体能通过自然语言（"画图""生成封面""画一张信息图"）自动识别并调用生图能力，而非要求用户手动拼命令行参数。
+
+### 5. 验证安装
+
+**如果已注册为 Claude Code 技能**：
+在 Claude Code 中输入 `/image 帮我画一只可爱的猫`，确认技能被触发并成功生图。
+
+**如果仅作为脚本使用**：
 ```bash
 # 使用任意引擎生成一张测试图
 python scripts/generate.py \
@@ -67,12 +101,12 @@ python scripts/generate.py \
   --out test_output.jpg
 ```
 
-成功输出 `test_output.jpg` 即安装完成。如果失败，根据错误信息排查：
+成功输出图片即为安装完成。如果失败，根据错误信息排查：
 - `缺少 API Key` → 检查 .env 文件是否正确填写
 - `连接超时` → 检查网络，尝试切换 `VF_PROVIDER=grsai`
 - `未找到 Python` → 确认 python3 在 PATH 中
 
-### 5. 浏览风格画廊
+### 6. 浏览风格画廊
 
 ```bash
 # 用浏览器打开风格画廊，查看 28 种预设风格

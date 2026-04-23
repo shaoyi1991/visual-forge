@@ -1,7 +1,6 @@
 # Visual Forge — AI 图像生成引擎
 
 > 一句话出图，29 种预设风格，双引擎自动 fallback，支持图生图。
-> **当前版本**：`1.3.0` — 查看版本：`python scripts/generate.py --version`
 >
 > **内部技能名**：`/image`（作为 Claude Code 技能使用时的触发词）
 
@@ -31,12 +30,15 @@ Visual Forge 是一个面向内容创作者的 AI 图像生成工具。它将复
 > **不会配置环境？直接把下面这段话复制给你的 AI 编程助手（Claude Code / Cursor / Copilot 等），它会自动完成安装和配置。**
 
 ```
-请帮我安装 Visual Forge 图像生成引擎。
+请帮我安装 Visual Forge 图像生成引擎，并注册为技能。
 
 1. git clone https://github.com/shaoyi1991/visual-forge.git
 2. 阅读项目中的 AGENTS.md，了解项目结构和配置要求
 3. 复制 .env.example 为 .env，引导我填入 API Key
-4. 运行一条测试命令验证安装成功
+4. 注册为技能：
+   - Claude Code：将项目文件放置到 .claude/skills/image/ 目录（推荐直接克隆到该目录）
+   - 其他 AI 平台：按照平台的技能/插件系统注册方式完成安装
+5. 运行一条测试命令验证安装成功
 
 如果我的环境缺少 Python 3.10+，也请帮我安装。
 ```
@@ -63,23 +65,7 @@ cd visual-forge
 
 ### 2. 配置环境变量
 
-**方式一：自动配置向导（推荐）**
-
-```bash
-python scripts/generate.py --setup
-```
-
-按提示输入 API Key，自动创建 `.env` 文件。
-
-**方式二：手动配置**
-
-在项目根目录（与 `scripts/` 和 `config/` 同级）创建 `.env` 文件：
-
-```bash
-cp .env.example .env
-```
-
-然后编辑填入至少一组 API Key：
+在项目根目录创建 `.env` 文件：
 
 ```bash
 # ===== 主引擎（yunwu / Gemini）=====
@@ -105,9 +91,6 @@ VF_JPG_QUALITY=85         # 1-95
 ```
 
 > 只需配置你想用的引擎密钥，不需要两个都配。`VF_PROVIDER=auto` 时会按 yunwu → grsai 顺序尝试。
->
-> **.env 搜索顺序**：脚本会自动在技能根目录 → 上级目录（最多 6 级）→ 当前工作目录中搜索 `.env`。
-> 如果部署在 Claude Code 的 `.claude/skills/image/` 下，也可放在项目根目录。
 
 ### 3. 一句话出图
 
@@ -121,7 +104,7 @@ python scripts/generate.py \
 # 自由 Prompt
 python scripts/generate.py \
   --config config/engine.json \
-  --prompt "a watercolor painting of mountains at sunset, no text no watermark" \
+  --prompt "a watercolor painting of mountains at sunset" \
   --out output.jpg --aspect-ratio "4:3"
 ```
 
@@ -359,7 +342,7 @@ cover:
     prompt: |                             # Prompt 模板（英文）
       your custom prompt here with {METAPHOR} as placeholder,
       describe the visual style, color palette, composition,
-      no text no watermark, {ratio} composition
+      {ratio} composition
 ```
 
 关键规则：
@@ -368,7 +351,7 @@ cover:
 - **自由生图**用 `modifier` 字段（不是 `prompt`），用户的描述会追加到 modifier 之后
 - **PPT** 用 `{title}`, `{subtitle}`, `{stats}` 变量
 - Prompt **模板必须是英文**（用户输入中英文均可，技能会保持原语言不翻译）
-- 必须包含 `no text no watermark`
+- 不要自动追加 `no text no watermark`（用户需要无文字时自行在描述中说明）
 - 建议在末尾注明比例（如 `4:3 composition`）
 
 ### 添加新引擎（Provider）
@@ -504,9 +487,9 @@ LLM_TIMEOUT=180  # 秒
 
 参见上方 [添加新引擎](#添加新引擎provider) 章节。核心步骤：`.env` 加密钥 → `engine.json` 注册 → `generate.py` 加调用函数。
 
-### Q: 为什么生成图片中有文字？
+### Q: 不想图片中有文字怎么办？
 
-当前 Prompt 模板均包含 `no text no watermark`，但 AI 模型不总是严格遵循。可以尝试在 Prompt 中加强调（如 `ABSOLUTELY NO TEXT NO LETTERS NO WORDS`）。
+在描述中自行说明，如"纯视觉插图，不要任何文字"。
 
 ---
 
