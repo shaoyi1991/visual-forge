@@ -62,7 +62,23 @@ cd visual-forge
 
 ### 2. 配置环境变量
 
-在项目根目录创建 `.env` 文件：
+**方式一：自动配置向导（推荐）**
+
+```bash
+python scripts/generate.py --setup
+```
+
+按提示输入 API Key，自动创建 `.env` 文件。
+
+**方式二：手动配置**
+
+在项目根目录（与 `scripts/` 和 `config/` 同级）创建 `.env` 文件：
+
+```bash
+cp .env.example .env
+```
+
+然后编辑填入至少一组 API Key：
 
 ```bash
 # ===== 主引擎（yunwu / Gemini）=====
@@ -88,6 +104,9 @@ VF_JPG_QUALITY=85         # 1-95
 ```
 
 > 只需配置你想用的引擎密钥，不需要两个都配。`VF_PROVIDER=auto` 时会按 yunwu → grsai 顺序尝试。
+>
+> **.env 搜索顺序**：脚本会自动在技能根目录 → 上级目录（最多 6 级）→ 当前工作目录中搜索 `.env`。
+> 如果部署在 Claude Code 的 `.claude/skills/image/` 下，也可放在项目根目录。
 
 ### 3. 一句话出图
 

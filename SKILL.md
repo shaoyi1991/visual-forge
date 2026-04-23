@@ -50,6 +50,10 @@ Visual Forge — AI 图像生成引擎（自然语言驱动）
   （完整 29 种风格见 config/prompts.yaml 的 keywords 字段）
 
 可视化浏览：PC 端可打开 config/style-gallery.html 查看风格画廊
+
+首次配置：
+  python scripts/generate.py --setup  → 交互式向导，引导输入 API Key
+  cp .env.example .env               → 手动创建配置文件
 ```
 
 展示完帮助菜单后，**自动用浏览器打开风格画廊**：
@@ -57,6 +61,44 @@ Visual Forge — AI 图像生成引擎（自然语言驱动）
 ```bash
 python -c "import webbrowser; webbrowser.open('config/style-gallery.html')"
 ```
+
+---
+
+## 首次配置（.env 放置）
+
+Visual Forge 需要 API Key 才能生图。Key 存储在 `.env` 文件中。
+
+### .env 放置位置
+
+脚本会自动在以下位置按顺序搜索 `.env`：
+
+1. **技能根目录**（推荐）— 与 `scripts/` 和 `config/` 同级
+   - 独立仓库：`visual-forge/.env`
+   - Claude Code 技能：`项目/.claude/skills/image/.env`
+   - Cherry Studio：`Skills/image/.env`
+2. **上级目录**（最多 6 级，遇 `.git` 停止）
+3. **当前工作目录**
+
+### 快速配置
+
+```bash
+# 方式一：交互式向导（推荐新手）
+python scripts/generate.py --setup
+
+# 方式二：手动创建
+cp .env.example .env
+# 编辑 .env，填入至少一组 API Key
+
+# 方式三：环境变量（临时）
+export LLM_API_KEY=sk-xxx
+```
+
+### API Key 获取
+
+只需配置一种引擎的 Key：
+
+- **yunwu**（推荐）：https://yunwu.ai/register?aff=ml8W
+- **grsai**：海外 https://grsai.com/zh / 国内 https://grsai.ai/zh
 
 ---
 

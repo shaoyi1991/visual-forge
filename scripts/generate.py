@@ -76,16 +76,51 @@ def _load_dotenv(dotenv_path: str | pathlib.Path):
             os.environ[k] = v
 
 
-def _init_dotenv():
-    """从项目根目录加载 .env"""
+def _find_dotenv() -> pathlib.Path | None:
+    """按优先级搜索 .env 文件，返回找到的路径或 None。"""
     script_dir = pathlib.Path(__file__).resolve().parent
-    # scripts/ → image/ → skills/ → .claude/ → 项目根
-    project_root = script_dir.parent.parent
-    dotenv = project_root / ".env"
-    if dotenv.exists():
-        _load_dotenv(dotenv)
+    skill_root = script_dir.parent
+
+    # 候选路径（按优先级）
+    candidates: list[pathlib.Path] = []
+
+    # 1. skill_root（与 scripts/、config/ 同级，推荐位置）
+    candidates.append(skill_root / ".env")
+
+    # 2. 向上逐级搜索（最多 6 级，遇 .git 停止）
+    d = skill_root
+    for _ in range(6):
+        d = d.parent
+        if d == d.parent:
+            break
+        candidates.append(d / ".env")
+        if (d / ".git").exists():
+            break
+
+    # 3. 当前工作目录
+    candidates.append(pathlib.Path.cwd() / ".env")
+
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
+
+def _preferred_dotenv_path() -> pathlib.Path:
+    """返回 .env 文件的最佳存放位置（skill_root 同级）。"""
+    script_dir = pathlib.Path(__file__).resolve().parent
+    return script_dir.parent / ".env"
+
+
+def _init_dotenv():
+    """从多个候选位置加载 .env。"""
+    found = _find_dotenv()
+    if found:
+        _load_dotenv(found)
     else:
-        _eprint(f"提示：未找到 .env 文件：{dotenv}")
+        preferred = _preferred_dotenv_path()
+        _eprint(f"提示：未找到 .env 文件。推荐位置：{preferred}")
+        _eprint(f"  运行 python scripts/generate.py --setup 进行首次配置")
 
 
 # ---------------------------------------------------------------------------
@@ -889,10 +924,143 @@ def _generate_via_grsai(prompt, out_path, aspect_ratio, image_size,
 
 
 # ---------------------------------------------------------------------------
+# 首次配置向导
+# ---------------------------------------------------------------------------
+
+def _print_setup_guide():
+    """非交互模式：输出配置指南，供 AI 代理解析并指导用户。"""
+    preferred = _preferred_dotenv_path()
+    found = _find_dotenv()
+    print("=" * 56)
+    print("  Visual Forge 配置指南")
+    print("=" * 56)
+    print()
+    if found:
+        print(f"  .env 已找到：{found}")
+    else:
+        print(f"  .env 未找到。推荐位置：{preferred}")
+    print()
+    print("  支持两种引擎（只需配置一种）：")
+    print()
+    print("  方案 A：yunwu（推荐）")
+    print("    注册：https://yunwu.ai/register?aff=ml8W")
+    print("    需要：LLM_API_KEY=sk-xxx")
+    print()
+    print("  方案 B：grsai（备用）")
+    print("    注册：海外 https://grsai.com/zh / 国内 https://grsai.ai/zh")
+    print("    需要：BANANA_API_KEY=sk-xxx")
+    print()
+    print("  快速配置（三选一）：")
+    print(f"    1. 终端运行：python scripts/generate.py --setup")
+    print(f"    2. 手动创建：cp .env.example {preferred}")
+    print("    3. 环境变量：export LLM_API_KEY=sk-xxx")
+    print("=" * 56)
+
+
+def _run_setup():
+    """交互式首次配置向导。"""
+    if not sys.stdin.isatty():
+        _print_setup_guide()
+        return
+
+    preferred = _preferred_dotenv_path()
+
+    print("=" * 56)
+    print("  Visual Forge 首次配置向导")
+    print("=" * 56)
+    print()
+    print(f"  .env 将创建在：{preferred}")
+    print()
+    print("  支持两种引擎（只需配置一种）：")
+    print()
+    print("  方案 A：yunwu（推荐）")
+    print("    注册地址：https://yunwu.ai/register?aff=ml8W")
+    print("    需要填写：LLM_API_KEY")
+    print()
+    print("  方案 B：grsai（备用）")
+    print("    注册地址：海外 https://grsai.com/zh")
+    print("             国内 https://grsai.ai/zh")
+    print("    需要填写：BANANA_API_KEY")
+    print()
+
+    if preferred.exists():
+        print(f"  注意：{preferred} 已存在，将追加缺失的密钥。")
+        existing = _read_text(preferred)
+    else:
+        existing = ""
+
+    lines: list[str] = []
+
+    # yunwu key
+    yunwu_configured = False
+    if "LLM_API_KEY=" in existing:
+        val_line = existing.split("LLM_API_KEY=")[1].split("\n")[0].strip()
+        if val_line and "your-api-key" not in val_line and val_line != "sk-":
+            yunwu_configured = True
+            print("  [跳过] LLM_API_KEY 已配置")
+    if not yunwu_configured:
+        key = input("  请输入 LLM_API_KEY（直接回车跳过）：").strip()
+        if key:
+            lines.append(f"LLM_API_KEY={key}")
+            lines.append("LLM_BASE_URL=https://yunwu.ai/v1")
+            print("  -> LLM_API_KEY 已记录")
+
+    # grsai key
+    grsai_configured = False
+    if "BANANA_API_KEY=" in existing:
+        val_line = existing.split("BANANA_API_KEY=")[1].split("\n")[0].strip()
+        if val_line and "your-api-key" not in val_line and val_line != "sk-":
+            grsai_configured = True
+            print("  [跳过] BANANA_API_KEY 已配置")
+    if not grsai_configured:
+        key = input("  请输入 BANANA_API_KEY（直接回车跳过）：").strip()
+        if key:
+            lines.append(f"BANANA_API_KEY={key}")
+            lines.append("BANANA_API_URL=http://grsai.dakka.com.cn/v1/draw/nano-banana")
+            lines.append("GRSAI_DRAW_API_URL=https://grsai.dakka.com.cn/v1/draw/completions")
+            print("  -> BANANA_API_KEY 已记录")
+
+    if not lines:
+        print()
+        print("  未输入任何密钥，配置已取消。")
+        print("  你可以稍后手动编辑 .env 或重新运行 --setup")
+        return
+
+    # 写入
+    try:
+        preferred.parent.mkdir(parents=True, exist_ok=True)
+        with open(preferred, "a", encoding="utf-8") as f:
+            if existing and not existing.endswith("\n"):
+                f.write("\n")
+            f.write("\n# === Visual Forge（由 --setup 自动添加）===\n")
+            for line in lines:
+                f.write(line + "\n")
+            f.write("\n# 输出参数\n")
+            f.write("VF_PROVIDER=auto\n")
+            f.write("VF_IMAGE_SIZE=2K\n")
+            f.write("VF_OUTPUT_FMT=jpg\n")
+            f.write("VF_JPG_QUALITY=85\n")
+            f.write("LLM_TIMEOUT=120\n")
+
+        print()
+        print(f"  配置已写入：{preferred}")
+        print("  现在可以运行生图命令了！")
+    except OSError as e:
+        print(f"\n  写入失败：{e}")
+        print(f"  请手动创建 {preferred}")
+    print("=" * 56)
+
+
+# ---------------------------------------------------------------------------
 # 主流程
 # ---------------------------------------------------------------------------
 
 def main():
+    # --setup 模式：在 argparse 之前截获
+    if "--setup" in sys.argv:
+        _run_setup()
+        return
+
     # 加载 .env
     _init_dotenv()
 
@@ -911,6 +1079,8 @@ def main():
                     help="生图引擎：auto / yunwu / grsai（覆盖 VF_PROVIDER 环境变量）")
     ap.add_argument("--model", default=None,
                     help="模型名（覆盖环境变量中的默认模型，如 gemini-3.1-flash-image-preview）")
+    ap.add_argument("--setup", action="store_true",
+                    help="首次配置向导：引导创建 .env 文件并填入 API Key")
 
     args = ap.parse_args()
 
@@ -950,7 +1120,21 @@ def main():
     jpg_quality = _normalize_jpg_quality(os.getenv("VF_JPG_QUALITY", str(settings.get("jpg_quality", 85))))
 
     if not api_key:
-        raise SystemExit("缺少 API Key：请设置 LLM_API_KEY 环境变量或在 .env 中配置")
+        raise SystemExit(
+            f"缺少 API Key\n"
+            f"\n"
+            f".env 文件：{'已找到(' + str(_find_dotenv()) + ')' if _find_dotenv() else '未找到'}\n"
+            f".env 推荐位置：{_preferred_dotenv_path()}\n"
+            f"\n"
+            f"快速修复（三选一）：\n"
+            f"  1. 运行配置向导：python scripts/generate.py --setup\n"
+            f"  2. 手动创建：cp .env.example .env  然后填入 API Key\n"
+            f"  3. 设环境变量：export LLM_API_KEY=sk-xxx\n"
+            f"\n"
+            f"API Key 获取地址：\n"
+            f"  yunwu：https://yunwu.ai/register?aff=ml8W\n"
+            f"  grsai：https://grsai.com/zh 或 https://grsai.ai/zh"
+        )
 
     # --style 参数处理
     style_ratio = None
