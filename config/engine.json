@@ -1,4 +1,5 @@
 {
+  "version": "1.3.0",
   "output_dir": "30_内容创作/32_草稿箱",
   "settings": {
     "max_retries": 2,

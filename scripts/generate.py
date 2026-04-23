@@ -26,6 +26,8 @@ import time
 import urllib.error
 import urllib.request
 
+__version__ = "1.3.0"
+
 
 def _eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -932,7 +934,7 @@ def _print_setup_guide():
     preferred = _preferred_dotenv_path()
     found = _find_dotenv()
     print("=" * 56)
-    print("  Visual Forge 配置指南")
+    print(f"  Visual Forge {__version__} — 配置指南")
     print("=" * 56)
     print()
     if found:
@@ -966,7 +968,7 @@ def _run_setup():
     preferred = _preferred_dotenv_path()
 
     print("=" * 56)
-    print("  Visual Forge 首次配置向导")
+    print(f"  Visual Forge {__version__} — 首次配置向导")
     print("=" * 56)
     print()
     print(f"  .env 将创建在：{preferred}")
@@ -1064,7 +1066,8 @@ def main():
     # 加载 .env
     _init_dotenv()
 
-    ap = argparse.ArgumentParser(description="API 生图：双引擎 fallback，支持 --style 快捷调用。")
+    ap = argparse.ArgumentParser(description="Visual Forge — AI 图像生成引擎")
+    ap.add_argument("--version", action="version", version=f"Visual Forge {__version__}")
     ap.add_argument("--config", default=None, help="配置文件路径")
     ap.add_argument("--prompt-file", default=None, help="提示词文件路径（带 YAML 头部）")
     ap.add_argument("--prompt", default=None, help="提示词文本")

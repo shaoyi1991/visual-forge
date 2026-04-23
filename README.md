@@ -1,6 +1,7 @@
 # Visual Forge — AI 图像生成引擎
 
 > 一句话出图，29 种预设风格，双引擎自动 fallback，支持图生图。
+> **当前版本**：`1.3.0` — 查看版本：`python scripts/generate.py --version`
 >
 > **内部技能名**：`/image`（作为 Claude Code 技能使用时的触发词）
 

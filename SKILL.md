@@ -1,10 +1,11 @@
 ---
 name: image
+version: "1.3.0"
 description: "AI 图像生成引擎。自然语言驱动，一句话出图。触发词：生图/画图/封面/信息图/配图/cover/draw/infographic。支持自然语言风格匹配（如'赛博风''温暖治愈''极简'自动对应风格）。"
 allowed-tools: [Read, Write, Edit, Bash]
 ---
 
-# Visual Forge — AI 图像生成引擎
+# Visual Forge v1.3.0 — AI 图像生成引擎
 
 **无输入或输入 -help 时，展示帮助菜单 + 自动打开风格画廊：**
 
