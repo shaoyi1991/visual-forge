@@ -15,14 +15,14 @@ cover:
     keywords: ["视觉笔记", "手绘笔记", "信息图", "notion"]
     ratio: "4:3"
     prompt: |
-      flat design infographic style, hand-drawn sketch of {METAPHOR}, clean minimal layout, white background with subtle blue-orange accent palette, pencil texture, central visual metaphor occupying 60% of frame, space for title overlay at top, sharp clean lines, no text no watermark, professional editorial illustration, 4:3 composition
+      flat design infographic style, hand-drawn sketch of {METAPHOR}, clean minimal layout, white background with subtle blue-orange accent palette, pencil texture, central visual metaphor occupying 60% of frame, space for title overlay at top, sharp clean lines, professional editorial illustration, 4:3 composition
 
   hand_drawn:
     name: "手绘插画"
     keywords: ["手绘", "插画", "可爱", "小红书"]
     ratio: "3:4"
     prompt: |
-      vibrant hand-drawn illustration of {METAPHOR}, warm terracotta and orange palette (#FF6B6B, #FFD93D, cream white), cream background with subtle paper texture, exaggerated cute proportions with large expressive features, colored pencil texture, bold visual symbol occupying upper 2/3 of frame, sticker-like appeal for social media scroll-stopping, high contrast warm tones, sharp details, no text no watermark, 3:4 vertical composition
+      vibrant hand-drawn illustration of {METAPHOR}, warm terracotta and orange palette (#FF6B6B, #FFD93D, cream white), cream background with subtle paper texture, exaggerated cute proportions with large expressive features, colored pencil texture, bold visual symbol occupying upper 2/3 of frame, sticker-like appeal for social media scroll-stopping, high contrast warm tones, sharp details, 3:4 vertical composition
 
   mono_bw:
     name: "极简黑白"
@@ -96,31 +96,37 @@ infographic:
     name: "坐标蓝图"
     keywords: ["蓝图", "坐标", "实验室", "技术"]
     prompt: |
-      technical blueprint infographic of {TOPIC}, coordinate grid background in faded cyan, engineering annotations with dimension lines and labels, lab manual aesthetic with serif font headers, precise geometric shapes and connecting arrows, data points plotted on graph paper, muted blue-gray palette with red accent markers, structured modular sections separated by thin rules, scientific diagram layout, no photographs, no text no watermark, 3:4 vertical composition, high resolution detailed illustration
+      technical blueprint infographic of {TOPIC}, coordinate grid background in faded cyan, engineering annotations with dimension lines and labels, lab manual aesthetic with serif font headers, precise geometric shapes and connecting arrows, data points plotted on graph paper, muted blue-gray palette with red accent markers, structured modular sections separated by thin rules, scientific diagram layout, no photographs, 3:4 vertical composition, high resolution detailed illustration
 
   retro_pop:
     name: "复古波普"
     keywords: ["波普", "复古", "70s"]
     prompt: |
-      1970s retro pop art infographic of {TOPIC}, thick black outlines dividing content into Swiss grid sections, high saturation CMYK color blocks (mustard yellow, coral red, teal blue), vintage halftone dot patterns, bold geometric shapes as data containers, pop art style illustrations with Ben-Day dots, newspaper print texture overlay, no text no watermark, 3:4 vertical composition
+      1970s retro pop art infographic of {TOPIC}, thick black outlines dividing content into Swiss grid sections, high saturation CMYK color blocks (mustard yellow, coral red, teal blue), vintage halftone dot patterns, bold geometric shapes as data containers, pop art style illustrations with Ben-Day dots, newspaper print texture overlay, 3:4 vertical composition
 
   scrapbook:
     name: "手帐拼贴"
     keywords: ["手帐", "拼贴", "证据板"]
     prompt: |
-      vintage scrapbook collage infographic of {TOPIC}, cork board background with push pins holding paper elements, masking tape and washi tape strips, layered paper scraps with torn edges, polaroid-style frames, coffee stain marks, newspaper clippings, old stamps and stickers, earth tones with pops of red and yellow, nostalgic evidence board aesthetic, no text no watermark, 3:4 vertical composition
+      vintage scrapbook collage infographic of {TOPIC}, cork board background with push pins holding paper elements, masking tape and washi tape strips, layered paper scraps with torn edges, polaroid-style frames, coffee stain marks, newspaper clippings, old stamps and stickers, earth tones with pops of red and yellow, nostalgic evidence board aesthetic, 3:4 vertical composition
 
   clay_doodle:
     name: "陶土手绘"
     keywords: ["陶土", "手绘", "暖色"]
     prompt: |
-      hand-drawn clay doodle style infographic of {TOPIC}, warm terracotta and burnt sienna palette, imperfect wobbly lines drawn with colored pencils, childlike doodle illustrations with naive charm, cream kraft paper background, organic shapes and arrows connecting ideas, sketched icons with visible stroke texture, friendly rounded forms, earthy warm tones (#C1694F, #E8D5B7, #8B7355), no text no watermark, 3:4 vertical composition
+      hand-drawn clay doodle style infographic of {TOPIC}, warm terracotta and burnt sienna palette, imperfect wobbly lines drawn with colored pencils, childlike doodle illustrations with naive charm, cream kraft paper background, organic shapes and arrows connecting ideas, sketched icons with visible stroke texture, friendly rounded forms, earthy warm tones (#C1694F, #E8D5B7, #8B7355), 3:4 vertical composition
 
   vector:
     name: "矢量插图"
     keywords: ["矢量", "扁平", "几何"]
     prompt: |
-      clean vector infographic of {TOPIC}, flat monoline illustration style, geometric simplification of complex concepts, large areas of solid color (#2D3436, #0984E3, #FFEAA7), precise bezier curves, minimal geometric icons, ample white space, modern Swiss design principles, bold color blocking with 3-4 primary colors, razor-sharp edges, no gradients no shadows, no text no watermark, 3:4 vertical composition
+      clean vector infographic of {TOPIC}, flat monoline illustration style, geometric simplification of complex concepts, large areas of solid color (#2D3436, #0984E3, #FFEAA7), precise bezier curves, minimal geometric icons, ample white space, modern Swiss design principles, bold color blocking with 3-4 primary colors, razor-sharp edges, no gradients no shadows, 3:4 vertical composition
+
+  warm_pastel:
+    name: "温暖治愈信息图"
+    keywords: ["温暖", "治愈", "心理", "自我探索", "柔和", "情感", "成长", "信息图"]
+    prompt: |
+      温暖治愈风信息图：{TOPIC}。整体氛围温柔、共情、内省，像一场与自我的轻声对话。所有文字、标签、标题必须使用中文。暖米色背景带细腻水彩纸纹理，中央放置主题相关的手绘水彩插图作为视觉焦点，周围环绕5-7个编号模块，用柔和弧线箭头依次连接。手绘水彩风格，线条松散自然，带有铅笔淡彩的笔触感，色彩自然晕染。色调：珊瑚桃色作为温暖点缀，鼠尾草绿和淡天蓝作为辅助色，深棕色文字，避免粉红色和橙色。装饰元素：对话气泡、小心形、书本、指南针等迷你图标，柔和弧线连接。16:9 composition
 
 # ========================================
 # 场景三：自由生图（freeform）
@@ -175,6 +181,13 @@ freeform:
     ratios: ["4:3", "1:1"]
     modifier: |
       ultra minimalist design, vast white negative space, single accent color element, geometric precision, clean sans-serif aesthetic, Japanese-inspired simplicity,
+
+  warm_pastel:
+    name: "温暖治愈"
+    keywords: ["温暖", "治愈", "心理", "自我探索", "柔和", "情感", "成长"]
+    ratios: ["16:9", "4:3"]
+    modifier: |
+      温暖治愈风格，温柔共情的氛围，暖米色背景带细腻水彩纸纹理，手绘水彩风格插图带松散自然的铅笔淡彩笔触感，色彩自然晕染，珊瑚桃色温暖点缀，鼠尾草绿和淡天蓝辅助色，深棕色文字，对话气泡和迷你主题图标装饰，柔和内省的情绪，所有文字必须使用中文，
 
 # ========================================
 # 场景四：PPT 幻灯片（ppt）
